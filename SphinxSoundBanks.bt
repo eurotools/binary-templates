@@ -17,6 +17,7 @@
 typedef char ID[4];
 typedef char Padding[2];
 local int sfxIsBigEndian;
+
 //*===============================================================================================
 //* DEFINE STRUCTS USED IN THE SFX FILE
 //*===============================================================================================
@@ -73,7 +74,15 @@ typedef struct
 	byte	Priority;
 	byte	Ducker;
 	byte 	MasterVolume;
+	if (IsBigEndian() > 0 && sfxIsBigEndian == 1)
+	{
+		LittleEndian(); 
+	}
 	ushort	Flags;
+	if (IsLittleEndian() > 0 && sfxIsBigEndian == 1)
+	{
+		BigEndian();
+	}
 	short	SamplesCount;
 } Sounds;
 
@@ -93,7 +102,7 @@ typedef struct
 {
 	uint 	Flags;
 	uint	Address;
-	uint 	PCMDataSize;
+	uint 	AudioDataSize;
 	uint 	Frequency;
 	uint 	RealSize;
 	uint	NumChannels;
@@ -182,6 +191,6 @@ for (index = 0; index < totalSamples; index++)
 	
 	FSeek(sampleInfoParams.Address + SBHeader.SampleDataStart);
 	SetBackColor(cDkRed);
-	struct {byte pcmData[sampleInfoParams.PCMDataSize]; } a;
+	struct {byte audioData[sampleInfoParams.AudioDataSize]; } a;
 	FSeek(currentPos);
 }
