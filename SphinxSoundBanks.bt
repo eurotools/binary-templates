@@ -1,0 +1,129 @@
+//------------------------------------------------
+//--- 010 Editor v11.0.1 Binary Template
+//
+//      File: SphinxSFXSoundBanks.bt
+//   Authors: jmarti856
+//   Version: 1.0
+//   Purpose: Parse SFX soundbanks files.
+//  Category: Audio
+// File Mask: *.sfx
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+ 
+//*===============================================================================================
+//* Typedefs for the sfx file
+//*===============================================================================================
+typedef char ID[4];
+typedef char Padding[2];
+
+//*===============================================================================================
+//* DEFINE STRUCTS USED IN THE SFX FILE
+//*===============================================================================================
+typedef struct 
+{
+    ID     Magic;
+    uint   Hashcode<format=hex>;
+    uint   ConstantOffset<format=hex>;
+    uint   FileSize;
+} CommonHeader;
+
+typedef struct
+{
+	uint	SFXStart<format=hex>;
+	uint 	SFXLength;
+	uint 	SampleInfoStart<format=hex>;
+	uint	SampleInfoLength;
+	uint	SpecialSampleInfoStart<format=hex>;
+	uint	SpecialSampleInfoLength;
+	uint	SampleDataStart<format=hex>;
+	uint	SampleDataLength;
+} SoundBanksHeader;
+
+typedef struct
+{
+	uint	HashCode<format=hex>;
+	uint 	Location<format=hex>;
+} SoundsArray;
+
+typedef struct
+{
+	short 	DuckerLength;
+	short 	MinDelay;
+	short 	MaxDelay;
+	short 	InnerRadiusReal;
+	short 	OuterRadiusReal;
+	byte	ReverbSend;
+	byte 	TrackingType;
+	byte	MaxVoices;
+	byte	Priority;
+	byte	Ducker;
+	byte 	MasterVolume;
+	ushort	Flags;
+	short	SamplesCount;
+} SoundsParams;
+
+typedef	struct
+{
+	short FileRef;
+	short PitchOffset;
+	short RandomPitchOffset;
+	byte BaseVolume;
+	byte RandomVolumeOffset;
+	byte Pan;
+	byte RandomPan;
+	Padding SectPadding;
+} SamplesParams;
+
+//*===============================================================================================
+//* READ FILE
+//*===============================================================================================
+//This file is in Little endian
+LittleEndian(); 
+
+// Define the headers
+SetBackColor(cLtPurple);
+CommonHeader header;
+
+// Check for valid header
+if(header.Magic != "MUSX")
+{
+    Warning( "File is not a valid SFX file. Template stopped." );
+    return -1;
+}
+
+// Read Soundbanks Header
+SetBackColor(cGreen);
+SoundBanksHeader SBHeader;
+
+//Go to SFXStart pos
+if (FSeek( SBHeader.SFXStart ) < 0)
+{
+	Warning( "Error searching the SFX start position");
+	return -1;
+}
+
+//Read SFX Array & SFX Params
+FSkip(sizeof(UINT));
+local int index = 0;
+local int indexSamples = 0;
+local long currentPos = 0;
+for (index = 0; index < ReadUInt(FTell()); index++)
+{
+	SetBackColor(cBlue);
+    SoundsArray StoredSound;
+	currentPos = FTell();
+	
+	FSeek(StoredSound.Location + SBHeader.SFXStart);
+    SetBackColor(cLtRed);
+	SoundsParams sfxParams;
+	for (indexSamples = 0; indexSamples < sfxParams.SamplesCount; indexSamples++)
+	{
+        SetBackColor(cAqua);
+		SamplesParams smpParams;
+	}
+	FSeek(currentPos);
+}
+
+//Read Sample Info Section
+
