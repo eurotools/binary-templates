@@ -16,12 +16,13 @@
 //*===============================================================================================
 typedef char ID[4];
 typedef char Padding[2];
-
+local int sfxIsBigEndian;
 //*===============================================================================================
 //* DEFINE STRUCTS USED IN THE SFX FILE
 //*===============================================================================================
 //The first parameters of the header ara always little endian
 LittleEndian(); 
+sfxIsBigEndian = 0;
 
 typedef struct 
 {
@@ -30,7 +31,15 @@ typedef struct
     uint   ConstantOffset<format=hex>;
     uint   FileSize;
 	/*For GC*/
-	if (ReadUInt() == 0x0800) LittleEndian(); else BigEndian();
+	if (ReadUInt() == 0x0800)
+	{
+		LittleEndian();
+	}
+	else
+	{
+		sfxIsBigEndian = 1;
+		BigEndian();		
+	}
 } CommonHeader;
 
 typedef struct
@@ -91,7 +100,15 @@ typedef struct
 	uint	Bits;
 	uint	PSI;
 	uint	LoopOffset;
+	if (IsBigEndian() > 0 && sfxIsBigEndian == 1)
+	{
+		LittleEndian(); 
+	}
 	uint	Duration;
+	if (IsLittleEndian() > 0 && sfxIsBigEndian == 1)
+	{
+		BigEndian();
+	}
 } SampleInfo;
 
 //*===============================================================================================
