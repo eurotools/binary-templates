@@ -161,4 +161,10 @@ for (index = 0; index < totalSamples; index++)
 {
 	SetBackColor(cLtGreen);
     SampleInfo sampleInfoParams;
+	currentPos = FTell();
+	
+	FSeek(sampleInfoParams.Address + SBHeader.SampleDataStart);
+	SetBackColor(cDkRed);
+	struct {byte pcmData[sampleInfoParams.PCMDataSize]; } a;
+	FSeek(currentPos);
 }
