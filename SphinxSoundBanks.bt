@@ -20,12 +20,17 @@ typedef char Padding[2];
 //*===============================================================================================
 //* DEFINE STRUCTS USED IN THE SFX FILE
 //*===============================================================================================
+//The first parameters of the header ara always little endian
+LittleEndian(); 
+
 typedef struct 
 {
     ID     Magic;
     uint   Hashcode<format=hex>;
     uint   ConstantOffset<format=hex>;
     uint   FileSize;
+	/*For GC*/
+	if (ReadUInt() == 0x0800) LittleEndian(); else BigEndian();
 } CommonHeader;
 
 typedef struct
@@ -61,7 +66,7 @@ typedef struct
 	byte 	MasterVolume;
 	ushort	Flags;
 	short	SamplesCount;
-} SoundsParams;
+} Sounds;
 
 typedef	struct
 {
@@ -73,14 +78,25 @@ typedef	struct
 	byte Pan;
 	byte RandomPan;
 	Padding SectPadding;
-} SamplesParams;
+} Samples;
+
+typedef struct
+{
+	uint 	Flags;
+	uint	Address;
+	uint 	PCMDataSize;
+	uint 	Frequency;
+	uint 	RealSize;
+	uint	NumChannels;
+	uint	Bits;
+	uint	PSI;
+	uint	LoopOffset;
+	uint	Duration;
+} SampleInfo;
 
 //*===============================================================================================
 //* READ FILE
 //*===============================================================================================
-//This file is in Little endian
-LittleEndian(); 
-
 // Define the headers
 SetBackColor(cLtPurple);
 CommonHeader header;
@@ -103,12 +119,15 @@ if (FSeek( SBHeader.SFXStart ) < 0)
 	return -1;
 }
 
-//Read SFX Array & SFX Params
+//Get the number of stored sounds in this section
+local int totalSounds = ReadUInt(FTell());
 FSkip(sizeof(UINT));
+
+//Read SFX Array & SFX Params
 local int index = 0;
 local int indexSamples = 0;
 local long currentPos = 0;
-for (index = 0; index < ReadUInt(FTell()); index++)
+for (index = 0; index < totalSounds; index++)
 {
 	SetBackColor(cBlue);
     SoundsArray StoredSound;
@@ -116,14 +135,30 @@ for (index = 0; index < ReadUInt(FTell()); index++)
 	
 	FSeek(StoredSound.Location + SBHeader.SFXStart);
     SetBackColor(cLtRed);
-	SoundsParams sfxParams;
+	Sounds sfxParams;
 	for (indexSamples = 0; indexSamples < sfxParams.SamplesCount; indexSamples++)
 	{
         SetBackColor(cAqua);
-		SamplesParams smpParams;
+		Samples smpParams;
 	}
 	FSeek(currentPos);
 }
 
 //Read Sample Info Section
+if (FSeek( SBHeader.SampleInfoStart ) < 0)
+{
+	Warning( "Error searching the sample info start position");
+	return -1;
+}
 
+//Get the number of stored samples in this section
+local int totalSamples = ReadUInt(FTell());
+FSkip(sizeof(UINT));
+
+//Read samples params
+index = 0;
+for (index = 0; index < totalSamples; index++)
+{
+	SetBackColor(cLtGreen);
+    SampleInfo sampleInfoParams;
+}
