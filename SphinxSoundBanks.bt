@@ -120,6 +120,28 @@ typedef struct
 	}
 } SampleInfo;
 
+typedef struct
+{
+	uint NumSamples;
+	uint NibblesADPCM;
+	uint SampleRate;
+	ushort LoopFlag;
+	ushort Format;
+	uint StartOffset;
+	uint EndOffset;
+	uint unk;
+	ushort DecodeCoefficients[16];
+	uint Gain;
+	uint Predictor;
+	uint SampleHistory;
+	uint SampleHistory2;
+	uint PredictorLoop;
+	uint SampleHistoryLoop;
+	uint SampleHistoryLoop2;
+	ushort PaddingSamples[10];
+	uint padding;
+} SpecialSample;
+
 //*===============================================================================================
 //* READ FILE
 //*===============================================================================================
@@ -193,4 +215,22 @@ for (index = 0; index < totalSamples; index++)
 	SetBackColor(cDkRed);
 	struct {byte audioData[sampleInfoParams.AudioDataSize]; } a;
 	FSeek(currentPos);
+}
+
+//Read Special Sample Info Section
+if (SBHeader.SampleInfoStart != SBHeader.SpecialSampleInfoStart)
+{
+	if (FSeek(SBHeader.SpecialSampleInfoStart ) < 0)
+	{
+		Warning( "Error searching the special sample info start position");
+		return -1;
+	}
+	
+	local int totalSpecialSamples = SBHeader.SpecialSampleInfoLength / sizeof(SpecialSample);
+	index = 0;
+	for (index = 0; index < totalSpecialSamples; index++)
+	{
+		SetBackColor(cLtGreen);
+		SpecialSample specialInfo;
+	}
 }
