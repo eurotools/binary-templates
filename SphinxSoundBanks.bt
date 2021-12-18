@@ -102,7 +102,7 @@ typedef struct
 {
 	uint 	Flags;
 	uint	Address;
-	uint 	AudioDataSize;
+	uint 	AudioDataSize<format=hex>;
 	uint 	Frequency;
 	uint 	RealSize;
 	uint	NumChannels;

@@ -1,0 +1,83 @@
+//------------------------------------------------
+//--- 010 Editor v11.0.1 Binary Template
+//
+//      File: SphinxMusics.bt
+//   Authors: jmarti856
+//   Version: 1.0
+//   Purpose: Parse Temporal SFX files.
+//  Category: Audio
+// File Mask: *.sfx
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+//*===============================================================================================
+//* Typedefs for the sfx file
+//*===============================================================================================
+typedef char Padding[2];
+
+//*===============================================================================================
+//* DEFINE STRUCTS USED IN THE SFX FILE
+//*===============================================================================================
+//The first parameters of the header ara always little endian
+LittleEndian(); 
+
+typedef struct
+{
+	uint	HashCode<format=hex>;
+	uint 	Location<format=hex>;
+} SoundsArray;
+
+typedef struct
+{
+	short 	DuckerLength;
+	short 	MinDelay;
+	short 	MaxDelay;
+	short 	InnerRadiusReal;
+	short 	OuterRadiusReal;
+	byte	ReverbSend;
+	byte 	TrackingType;
+	byte	MaxVoices;
+	byte	Priority;
+	byte	Ducker;
+	byte 	MasterVolume;
+	ushort	Flags;
+	short	SamplesCount;
+} Sounds;
+
+typedef	struct
+{
+	short FileRef;
+	short PitchOffset;
+	short RandomPitchOffset;
+	byte BaseVolume;
+	byte RandomVolumeOffset;
+	byte Pan;
+	byte RandomPan;
+	Padding SectPadding;
+} Samples;
+
+
+//Get the number of stored sounds in this section
+local int totalSounds = ReadUInt(FTell());
+FSkip(sizeof(UINT));
+
+//Read SFX Array & SFX Params
+local int index = 0;
+local int indexSamples = 0;
+local long currentPos = 0;
+for (index = 0; index < totalSounds; index++)
+{
+	SetBackColor(cBlue);
+    SoundsArray StoredSound;
+	currentPos = FTell();
+	
+	FSeek(StoredSound.Location);
+    SetBackColor(cLtRed);
+	Sounds sfxParams;
+	for (indexSamples = 0; indexSamples < sfxParams.SamplesCount; indexSamples++)
+	{
+        SetBackColor(cAqua);
+		Samples smpParams;
+	}
+	FSeek(currentPos);
+}

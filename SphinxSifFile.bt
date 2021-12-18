@@ -1,0 +1,49 @@
+//------------------------------------------------
+//--- 010 Editor v11.0.1 Binary Template
+//
+//      File: SphinxMusics.bt
+//   Authors: jmarti856
+//   Version: 1.0
+//   Purpose: Parse Temporal SIF files.
+//  Category: Audio
+// File Mask: *.sif
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+//*===============================================================================================
+//* Typedefs for the sfx file
+//*===============================================================================================
+typedef char Padding[2];
+
+//*===============================================================================================
+//* DEFINE STRUCTS USED IN THE SFX FILE
+//*===============================================================================================
+//The first parameters of the header ara always little endian
+LittleEndian(); 
+
+typedef struct
+{
+	uint 	Flags;
+	uint	Address<format=hex>;
+	uint 	AudioDataSize<format=hex>;
+	uint 	Frequency;
+	uint 	RealSize<format=hex>;
+	uint	NumChannels;
+	uint	Bits;
+	uint	PSI;
+	uint	LoopOffset;
+	uint	Duration;
+} SampleInfo;
+
+
+//Get the number of stored samples in this section
+local int totalSamples = ReadUInt(FTell());
+FSkip(sizeof(UINT));
+
+//Read samples params
+local int index = 0;
+for (index = 0; index < totalSamples; index++)
+{
+	SetBackColor(cLtGreen);
+    SampleInfo sampleInfoParams;
+}
