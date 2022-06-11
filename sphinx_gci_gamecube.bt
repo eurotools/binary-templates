@@ -15,8 +15,8 @@ BigEndian();
 
 struct
 {
-    char game_id[4];
-    ushort id_a, id_b <format=hex>;
+    char game_id[6];
+    ushort id_b <format=hex>;
     char game_id_b[4];
     byte pad[28];
     uint variable_size_thing <format=hex>;
