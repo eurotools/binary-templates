@@ -34,3 +34,9 @@ struct
 {
     ubyte slot_a, slot_b, slot_c; ubyte more[5]; char pad[0x1e38];
 } eurocom_head;
+
+byte save_a[0xbce8];
+byte save_b[0xbce8];
+byte save_c[0xbce8];
+
+byte pad[0x948];
