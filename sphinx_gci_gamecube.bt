@@ -6,7 +6,7 @@
 //   Version: 
 //   Purpose: 
 //  Category: 
-// File Mask: 
+// File Mask: *.gci
 //  ID Bytes: 
 //   History: 
 //------------------------------------------------
@@ -15,6 +15,15 @@ BigEndian();
 
 struct
 {
+    uint game_id;
+    uint b;
+    uint game_id_b;
+    byte pad[28];
+    uint variable_size_thing;
+    uint stuff[6];
 
-    uint a;
+
+    byte pad_b[380];
+    char game_title_str[32];
+    char game_descr_str[32];
 } gci_head;
