@@ -15,15 +15,22 @@ BigEndian();
 
 struct
 {
-    uint game_id;
-    uint b;
-    uint game_id_b;
+    char game_id[4];
+    uint b <format=hex>;
+    char game_id_b[4];
     byte pad[28];
-    uint variable_size_thing;
-    uint stuff[6];
+    uint variable_size_thing <format=hex>;
+    uint stuff[6] <format=hex>;
 
 
     byte pad_b[380];
     char game_title_str[32];
     char game_descr_str[32];
+
+    byte img_icon[0x2000];
 } gci_head;
+
+struct
+{
+    ubyte slot_a, slot_b, slot_c; ubyte more[5]; char pad[0x1e38];
+} eurocom_head;
