@@ -1,0 +1,84 @@
+//------------------------------------------------
+//--- 010 Editor v11.0.1 Binary Template
+//
+//      File: SphinxStreamSounds.bt
+//   Authors: jmarti856
+//   Version: 1.0
+//   Purpose: Parse SFX Streambanks files.
+//  Category: Audio
+// File Mask: *.sfx
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+ 
+//*===============================================================================================
+//* Typedefs for the sfx file
+//*===============================================================================================
+typedef char ID[4];
+typedef char Padding[2];
+
+//*===============================================================================================
+//* DEFINE STRUCTS USED IN THE SFX FILE
+//*===============================================================================================
+//The first parameters of the header ara always little endian
+LittleEndian(); 
+
+typedef struct
+{
+	uint StartMarkerCount;
+	uint MarkerCount;
+	uint StartMarkerOffset;
+	uint MarkerOffset;
+	uint BaseVolume;
+}soundDetails;
+
+typedef struct
+{
+	int Name;
+	uint Position;
+	uint MarkerType;
+	uint Flags;
+	uint Extra;
+	uint LoopStart;
+	uint MarkerCount;
+	uint LoopMarkerCount;
+} Marker;
+
+typedef struct
+{
+	uint Name;
+	uint Position;
+	uint MarkerType;
+	uint Flags;
+	uint Extra;
+	uint LoopStart;
+	uint MarkerCount;
+	uint LoopMarkerCount;
+	uint MarkerPosition;
+	uint IsInstant;
+	uint InstantBuffer;
+	uint StateA;
+	uint StateB;
+}StartMarker;
+
+//*===============================================================================================
+//* READ FILE
+//*===============================================================================================
+// Define the headers
+SetBackColor(cLtRed);
+soundDetails details;
+local uint markersCount = 0;
+
+//Markers
+for (markersCount = 0; markersCount < details.StartMarkerCount; markersCount++)
+{
+	SetBackColor(cAqua);
+	StartMarker sMarkers;
+}
+
+//Start Markers
+for (markersCount = 0; markersCount < details.MarkerCount; markersCount++)
+{
+	SetBackColor(cLtGreen);
+	Marker markers;
+}

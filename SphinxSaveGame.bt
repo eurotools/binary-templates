@@ -1,0 +1,119 @@
+//------------------------------------------------
+//--- 010 Editor v11.0.1 Binary Template
+//
+//      File: SphinxSoundBanks.bt
+//   Authors: jmarti856
+//   Version: 1.0
+//   Purpose: Parse Save Games files.
+//  Category: Audio
+// File Mask: *
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+ 
+ //*===============================================================================================
+//* DATA STRUCTS
+//*===============================================================================================
+ typedef struct 
+{
+	uint title_hashcode <format=hex>;
+	uint desc_hashcode <format=hex>;
+}note_entry_t;
+
+typedef struct 
+{
+	uint hashcode <format=hex>;
+	uint value;
+}objective_entry_t;
+ 
+typedef struct 
+{
+	uint hashcode <format=hex>;;
+	int count_cur;
+	int count_max;
+	uint flags;
+}item;
+ 
+typedef struct 
+{
+	uint cur_sel_item;
+	uint item_count;
+	item items[140];
+}item_cycle;
+ 
+//*===============================================================================================
+//* DEFINE STRUCTS USED IN THE SAVEGAME FILE
+//*===============================================================================================
+//The first parameters of the header ara always little endian
+LittleEndian(); 
+
+typedef struct
+{
+	uint version <format=hex>;
+	uint version_again <format=hex>;
+	uint game_time_sec;
+	short scarabs;
+	short health_ankhs;
+	short crowns;
+    char save_name_tag[16];
+	short padding;
+	uint cur_level_hashcode <format=hex>;
+	uint cur_level_restart_id;
+	int cur_level_entrance_id;
+	int cur_level_timer;
+	int game_time_sec_b;
+	char alignment_88h[4];
+}headerStruct;
+
+typedef struct
+{
+	char padding[4];
+	note_entry_t notes[10];
+	uint note_count;
+}notes;
+
+typedef struct
+{
+	uint objective_count;
+	objective_entry_t objective_array[1700];
+}objectives_t;
+
+typedef struct
+{
+	uint health_thirds;
+	uint total_health_thirds;
+}SecondaryHeaderFields;
+
+typedef struct
+{
+	uint filter_include;
+	uint filter_exclude;
+	uint filter_optional;
+	uint current_cycle;
+	uint used_cycle_count;
+	item_cycle item_cycle_t[7];
+}bos_items;
+
+//*===============================================================================================
+//* READ FILE
+//*===============================================================================================
+SetBackColor(cAqua);
+headerStruct infoheaderStruct;
+
+SetBackColor(cRed);
+notes notesSphinx;
+
+SetBackColor(cGreen);
+notes notesMummy;
+
+SetBackColor(cLtBlue);
+objectives_t Objectives;
+
+SetBackColor(cSilver);
+SecondaryHeaderFields sphinxHealth;
+
+SetBackColor(cDkYellow);
+bos_items sphinxItems;
+
+SetBackColor(cWhite);
+bos_items mummyItems;

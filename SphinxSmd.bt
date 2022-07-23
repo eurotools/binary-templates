@@ -1,0 +1,28 @@
+//------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: Eurocom SMD (Sound Marker Data?)
+//   Authors: Swyter
+//   Version: 2022.03.26
+//   Purpose: Look-up-table created by Eurosound to precalculate the ADPCM states required for loop/jump points.
+//            You can load the listenable data in Audacity by importing as raw data and picking the following settings:
+//              * Signed 16-bit PCM, little-endia, Stereo, start offset 4, amount to import 100%, sample rate 11025Hz.
+//                This works because the first 16-bits of each state is the previously-decoded ADPCM sample, and the next
+//                16-bits are the rest and we can discard them to the other channel. 11025Hz is 44100 Hz / 4, this is
+//                because the raw WAV is 44100 Hz, when resampled the ADPCM data is 22050 Hz, and we only need states for
+//                even samples, not odd ones (the other half of each ADPCM byte, which stores two nibbles; two encoded samples).
+//                So we end up accidentally storing 1/4 of the decoded data in there and it's actually listenable.
+//  Category: Game, Audio
+// File Mask: *.smd
+//  ID Bytes: 00 00 00 00
+//------------------------------------------------
+struct state
+{
+    short  valpred; /* swy: previous decoded ADPCM sample to use as base */
+
+    ushort inputbuffer : 8 <format=hex>; /* the last encoded ADPCM byte, two samples, two nibbles */
+
+    ushort bufferstep  : 7 <format=hex>;
+    ushort index       : 1 <format=hex>;
+
+} states [FileSize() / sizeof(state)] <read=Str("%3i", valpred)>;
