@@ -1,11 +1,11 @@
 //------------------------------------------------
 //--- 010 Editor v11.0.1 Binary Template
 //
-//      File: SphinxSoundBanks.bt
+//      File: SphinxSaveGame.bt
 //   Authors: jmarti856
 //   Version: 1.0
 //   Purpose: Parse Save Games files.
-//  Category: Audio
+//  Category: SaveGames
 // File Mask: *
 //  ID Bytes: 
 //   History: 
@@ -14,7 +14,7 @@
  //*===============================================================================================
 //* DATA STRUCTS
 //*===============================================================================================
- typedef struct 
+typedef struct 
 {
 	uint title_hashcode <format=hex>;
 	uint desc_hashcode <format=hex>;
@@ -40,6 +40,29 @@ typedef struct
 	uint item_count;
 	item items[140];
 }item_cycle;
+
+typedef struct
+{
+	float x;
+	float y;
+	float z;
+}vector_xyz;
+
+typedef struct
+{
+	float x;
+	float y;
+	float z;
+	float w;
+}vector_xyzw;
+
+typedef struct
+{
+	uint trig_type;
+	uint trig_subtype;
+	uint saved_state_value;
+	vector_xyz vector_xyz_t;
+}cur_level_saved_triggers;
  
 //*===============================================================================================
 //* DEFINE STRUCTS USED IN THE SAVEGAME FILE
@@ -94,6 +117,56 @@ typedef struct
 	item_cycle item_cycle_t[7];
 }bos_items;
 
+typedef struct
+{
+	uint cur_level_saved_triggers_count;
+	cur_level_saved_triggers saved_trigger_t[100];	
+}savedTriggers;
+
+typedef struct
+{
+	uint player_character_idx;
+}playerCharacter;
+
+typedef struct
+{
+	uint secondMummy;
+	uint thirdMummy;
+}triple_mummy_copies;
+
+typedef struct
+{
+	vector_xyzw mummyPos[2];
+}triple_mummy_copies_position;
+
+typedef struct
+{
+	vector_xyzw mummyPos[2];
+}triple_mummy_copies_rotation;
+
+typedef struct
+{
+	float camera_angle;
+	float camera_elevation;
+	float camera_distance;
+	vector_xyzw camera_position;
+}camera;
+
+typedef struct
+{
+	uint prog_buttons[4];
+}mummy_prog_buttons;
+
+typedef struct
+{
+	uint prog_buttons[4];
+}sphinx_prog_buttons;
+
+typedef struct
+{
+	uint trailing_crc32;
+}crc32;
+
 //*===============================================================================================
 //* READ FILE
 //*===============================================================================================
@@ -117,3 +190,33 @@ bos_items sphinxItems;
 
 SetBackColor(cWhite);
 bos_items mummyItems;
+
+FSeek(0xB2C4);
+SetBackColor(cDkRed);
+savedTriggers curMapTriggers;
+
+SetBackColor(cDkPurple);
+playerCharacter playerIndex;
+
+FSeek(0xBC50);
+SetBackColor(cLtGray);
+triple_mummy_copies mummyCopies;
+
+SetBackColor(cLtGreen);
+triple_mummy_copies_position mummyPosition;
+
+SetBackColor(cAqua);
+triple_mummy_copies_rotation mummyRotation;
+
+SetBackColor(cLtRed);
+camera cameraData;
+
+SetBackColor(cDkAqua);
+mummy_prog_buttons mummyButtons;
+
+SetBackColor(cYellow);
+sphinx_prog_buttons sphinxButtons;
+
+FSeek(0xBCD8);
+SetBackColor(cGreen);
+crc32 redundancyCheck;
