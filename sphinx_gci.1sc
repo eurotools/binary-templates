@@ -3,8 +3,9 @@
 //
 //      File: Sphinx and the Cursed Mummy - GameCube save data (CRC32 regen script)
 //   Authors: Swyter
-//   Version: 2022.05.01
+//   Version: 2022.08.04
 //   Purpose: Recompute the CRC32 checksum that the Sphinx GameCube savedata seems to use for error correction.
+//            This is probably work for any other GCI saves, I think.
 //  Category: Game
 //------------------------------------------------
 
