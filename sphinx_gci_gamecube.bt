@@ -20,7 +20,9 @@ struct
     char game_id_b[4];
     byte pad[28];
     uint variable_size_thing <format=hex>;
-    uint stuff[6] <format=hex>;
+    uint checksummed_data_begin <format=hex>;
+    uint stuff[4] <format=hex>;
+    uint checksum <format=hex>; /* swy: from 0x1c0 to data end (0x28040) */
 
 
     byte pad_b[380];
