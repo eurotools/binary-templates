@@ -50,9 +50,9 @@ struct save_slot
 
     ubyte pad[0x43f0];
 
-    struct { byte p[50], e[50]; } huge_blocks[200];
+    struct { byte p[50] <format=hex>, e[50] <format=hex>; } huge_blocks[200];
 
-    struct { byte p[32]; } colr_blocks[256];
+    struct { uint p[32/4]  <format=hex>; } colr_blocks[256];
 
 };
 
