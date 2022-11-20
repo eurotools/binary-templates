@@ -1,0 +1,44 @@
+//------------------------------------------------
+//--- 010 Editor v12.0.1k Binary Template
+//
+//      File: Sphinx and the Cursed Mummy - GameCube save data (three-slot sections)
+//   Authors: Swyter
+//   Version: 2022.08.04
+//   Purpose: This will probably work for any other GCI saves, I think.
+//  Category: Game
+// File Mask: *.gci
+//------------------------------------------------
+
+BigEndian();
+
+struct
+{
+    char game_id[6];
+    ushort id_b <format=hex>;
+    char game_id_b[4];
+    byte pad[28];
+    uint variable_size_thing <format=hex>;
+    uint checksummed_data_begin_offset <format=hex>;
+    uint stuff[4] <format=hex>;
+    uint checksum <format=hex>; /* swy: from 0x1c0 to data end (0x28040) */
+
+
+    byte pad_b[380];
+    char game_title_str[32];
+    char game_descr_str[32];
+
+    byte img_icon[0x2000];
+} gci_head;
+
+struct
+{
+    ubyte slot_a, slot_b, slot_c; ubyte more[5]; char pad[0x1e38];
+} eurocom_head;
+
+char build_time[32];
+char build_date[32];
+int three;
+
+byte save_a[0xbce8];
+byte save_b[0xbce8];
+byte save_c[0xbce8];
