@@ -52,8 +52,8 @@ struct save_slot
 
     struct { uint p[50 / 4] <format=hex>, e[50/4] <format=hex>; uint a; } huge_blocks[200];
 
-    uint intro [32/4];
-    struct { uint p <format=hex>; float x, y, z; uint a <format=hex>, e<format=hex>,i<format=hex>,o <format=hex>; } colr_blocks[255];
+    uint intro [31/4] <format=hex>; uint colr_count;
+    struct { uint p <format=hex>; float x, y, z; uint a <format=hex>, e<format=hex>,i<format=hex>,o <format=hex>; } colr_blocks[colr_count];
 };
 
 
