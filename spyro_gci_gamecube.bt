@@ -44,16 +44,14 @@ int unkk[400] <format=hex>;
 struct save_slot
 {
     ushort year; ubyte month, day; ubyte hour, minute, second, zero;
-    float play_time_in_secs; uint unk, four, thing, thong, thung;
+    float play_time_in_secs; uint unk, four, health, gem_count, gem_counter;
 
     ushort a,b,c,d,e,f;
 
-    ubyte pad[0x43f0];
+    uint pad[0x43f0 / 4]  <format=hex>;
 
-    struct { byte p[50] <format=hex>, e[50] <format=hex>; } huge_blocks[200];
-
-    struct { uint p[32/4]  <format=hex>; } colr_blocks[256];
-
+    struct { uint p[50 / 4] <format=hex>, e[50/4] <format=hex>; uint a; } huge_blocks[200];
+    struct { uint p <format=hex>; float x, y, z; uint a <format=hex>, e<format=hex>,i<format=hex>,o <format=hex>; } colr_blocks[256];
 };
 
 
