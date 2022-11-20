@@ -39,6 +39,12 @@ char build_time[32];
 char build_date[32];
 int three;
 
-byte save_a[0xbce8];
-byte save_b[0xbce8];
-byte save_c[0xbce8];
+struct save_slot
+{
+    ushort year; ubyte month, day; ubyte hour, minute;
+};
+
+
+FSeek(0x061A0); struct save_slot slot_a;
+FSeek(0x11400); struct save_slot slot_b;
+FSeek(0x1C660); struct save_slot slot_c;
