@@ -44,7 +44,17 @@ int unkk[400] <format=hex>;
 struct save_slot
 {
     ushort year; ubyte month, day; ubyte hour, minute, second, zero;
-    float play_time_in_secs; uint unk, breath_selected, health, gem_count, gem_counter;
+    float play_time_in_secs; uint unk;
+
+    enum
+    {
+        breath_0,
+        breath_1,
+        breath_2,
+        breath_3,
+        breath_4,
+    } breath_selected;
+    uint health, gem_count, gem_counter;
 
     ushort a,b,c,d,e,f;
 
@@ -60,3 +70,18 @@ struct save_slot
 FSeek(0x061A0); struct save_slot slot_a;
 FSeek(0x11400); struct save_slot slot_b;
 FSeek(0x1C660); struct save_slot slot_c;
+
+
+
+enum player_character_id /* swy: provided by Ebbe */
+{
+    No_character = 0,
+    Spyro = 1,
+    Hunter = 2,
+    Sparx = 3,
+    Blink = 4,
+    Sgt_Byrd = 5,
+    Ball_gadget = 6,
+    Ember = 7,
+    Flame = 8
+};
