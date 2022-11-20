@@ -41,7 +41,8 @@ int three;
 
 struct save_slot
 {
-    ushort year; ubyte month, day; ubyte hour, minute;
+    ushort year; ubyte month, day; ubyte hour, minute, second, zero;
+    float play_time_maybe; uint unk, four, thing, thong, thung;
 };
 
 
