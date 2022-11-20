@@ -39,10 +39,21 @@ char build_time[32];
 char build_date[32];
 int three;
 
+int unkk[400] <format=hex>;
+
 struct save_slot
 {
     ushort year; ubyte month, day; ubyte hour, minute, second, zero;
-    float play_time_maybe; uint unk, four, thing, thong, thung;
+    float play_time_in_secs; uint unk, four, thing, thong, thung;
+
+    ushort a,b,c,d,e,f;
+
+    ubyte pad[0x43f0];
+
+    struct { byte p[50], e[50]; } huge_blocks[200];
+
+    struct { byte p[32]; } colr_blocks[256];
+
 };
 
 
