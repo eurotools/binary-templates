@@ -57,8 +57,9 @@ struct save_slot
     uint health, gem_count, gem_counter;
 
     ushort a,b,c,d,e,f;
-
-    uint pad[0x43f0 / 4]  <format=hex>;
+    uint unkbb[0x3a / 4];
+    ubyte empty, empty, dark_gems, thing, eggs, more, pada, padb;
+    uint ped[0x43b2 / 4];
 
     struct { uint p[50 / 4] <format=hex>, e[50/4] <format=hex>; uint a; } huge_blocks[200];
 
