@@ -48,11 +48,11 @@ struct save_slot
 
     enum
     {
-        breath_0,
-        breath_1,
-        breath_2,
-        breath_3,
-        breath_4,
+        breath_none,
+        breath_fire = 1,
+        breath_water = 2,
+        breath_ice = 4,
+        breath_electric = 8,
     } breath_selected;
     uint health, gem_count, gem_counter;
 
