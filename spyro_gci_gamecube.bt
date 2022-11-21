@@ -58,8 +58,10 @@ struct save_slot
 
     ushort a,b,c,d,e,f;
     uint unkbb[0x3a / 4];
-    ubyte empty, empty, dark_gems, thing, eggs, more, pada, padb;
-    uint ped[0x43b2 / 4];
+    ushort alignment;
+    ubyte dark_gems, light_gems, eggs, more;
+    ushort alignment_b;
+    uint unkcc[0x43b2 / 4];
 
     struct { uint p[50 / 4] <format=hex>, e[50/4] <format=hex>; uint a; } huge_blocks[200];
 
