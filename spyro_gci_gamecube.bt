@@ -1,9 +1,9 @@
 //------------------------------------------------
 //--- 010 Editor v12.0.1k Binary Template
 //
-//      File: Sphinx and the Cursed Mummy - GameCube save data (three-slot sections)
+//      File: Spyro: A Hero's Tail - GameCube save data (three-slot sections)
 //   Authors: Swyter
-//   Version: 2022.08.04
+//   Version: 2022.11.22
 //   Purpose: This will probably work for any other GCI saves, I think.
 //  Category: Game
 // File Mask: *.gci
@@ -56,7 +56,7 @@ struct save_slot
     } breath_selected;
     uint health, gem_count, gem_counter;
 
-    ushort a,b,c,d,e,f;
+    ubyte a,b,c,d,e,f,g,h,i,j,k,l;
     uint unkbb[0x3a / 4];
     ushort alignment;
     ubyte dark_gems, light_gems, eggs, more;
