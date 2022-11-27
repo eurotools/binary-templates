@@ -39,8 +39,9 @@ char game_build_time[32];
 char game_build_date[32];
 int three;
 
-enum<uint> bool { off = 0, enabled = 1 };
-enum<uint> cam_reversal { normal, reversed };
+enum<uint> bool         {     off = 0,  enabled = 1 };
+enum<uint> cam_reversal {  normal = 0, reversed = 1 };
+enum<uint> cam_mode     { passive,       active     };
 
 struct
 {
@@ -50,7 +51,8 @@ struct
     uint thingo, thingu;
     float sfx_volume; uint music_volume; /* swy 0-100 */
 
-    cam_reversal aa, sgt_byrd_y_axis, cc, dd;
+    cam_reversal aa, sgt_byrd_y_axis, cc;
+    cam_mode camera;
     bool rumble_feature;
     uint ff;
 
