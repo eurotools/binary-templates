@@ -42,9 +42,9 @@ int three;
 struct
 {
     ubyte pad <format=hex>; ubyte unkb[15] <format=hex>;
-    struct { int common_spyro_save_block[12/4] <format=hex>; } patterna [16] <format=hex>;
+    struct { int common_spyro_save_block[12/4] <format=hex>; } patterna[16] <format=hex>;
     ubyte unk[5 + 0x27] <format=hex>;
-    struct { int common_spyro_save_block[32/4] <format=hex>; } patternb [8] <format=hex>;
+    struct { float x, y, z; int common_spyro_save_block[(32/4)-3] <format=hex>; } patternb[8] <format=hex>;
 
 } common_spyro_save_block;
 
