@@ -39,7 +39,7 @@ char build_time[32];
 char build_date[32];
 int three;
 
-int unkk[400] <format=hex>;
+int common_spyro_save_block[400] <format=hex>;
 
 struct save_slot
 {
@@ -56,8 +56,12 @@ struct save_slot
     } breath_selected;
     uint health, gem_count, gem_counter;
 
-    ubyte a,b,c,d,e,f,g,h,i,j,k,l;
-    uint unkbb[0x3a / 4];
+    ubyte a,b,c,d;
+
+    struct element_storage { ubyte amount, carry_limit, magazine_limit, magazine_amount; };
+    element_storage fire, ice, water, electric;
+
+    uint unkbb[(0x3a - 8) / 4];
     ushort alignment;
     ubyte dark_gems, light_gems, eggs, more;
     ushort alignment_b;
