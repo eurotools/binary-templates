@@ -84,13 +84,16 @@ typedef struct
 
     struct { uint p[50 / 4] <format=hex>, e[50/4] <format=hex>; uint a; } huge_blocks[200];
 
-    uint intro [31/4] <format=hex>; uint colr_count;
+    uint intro [3] <format=hex>;
+
+    float decimal_something; uint a, b, c;
+    uint saved_count;
     struct
     {
         uint hashcode <format=hex>;
         float x, y, z;
-        uint a <format=hex>, e <format=hex>, i <format=hex>, o <format=hex>;
-    } colr_blocks[colr_count];
+        int tail_a <format=hex>, tail_b <format=hex>, tail_c <format=hex>, tail_d <format=hex>;
+    } saved_blocks[saved_count];
 
 } save_slot <read=Str(
     "[Started: %u-%02u-%02u %02u:%02u:%02u] [Played: %02u:%02u:%02u] [d:%02u/40 l:%03u/100 e:%02u/80]",
