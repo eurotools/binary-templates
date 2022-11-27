@@ -39,6 +39,9 @@ char game_build_time[32];
 char game_build_date[32];
 int three;
 
+enum<uint> bool { off = 0, enabled = 1 };
+enum<uint> cam_reversal { normal, reversed };
+
 struct
 {
     ubyte pad <format=hex>; ubyte unkb[15];
@@ -46,7 +49,10 @@ struct
 
     uint thingo, thingu;
     float sfx_volume; uint music_volume; /* swy 0-100 */
-    uint aa, bb, cc, dd, rumble_feature, ff;
+
+    cam_reversal aa, sgt_byrd_y_axis, cc, dd;
+    bool rumble_feature;
+    uint ff;
 
     ubyte uninitialized_mem[5]; ubyte unkcc[7];
 
@@ -84,8 +90,6 @@ typedef struct
     
     ushort fire_arrows_count;
     ushort fire_arrows_limit;
-    
-    enum<uint> bool { off = 0, enabled = 1};
     
     struct
     {
