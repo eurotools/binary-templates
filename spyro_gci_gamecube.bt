@@ -43,11 +43,11 @@ struct
 {
     ubyte pad <format=hex>; ubyte unkb[15];
     struct { int edb_file_hc <format=hex>, zero, zero; } load_files[16] <format=hex>;
-    uint unk[2] <format=hex>;
 
+    uint thingo, thingu;
     float sfx_volume; uint music_volume; /* swy 0-100 */
+    uint aa, bb, cc, dd, rumble_feature, ff;
 
-    uint unko[6] <format=hex>;
     ubyte uninitialized_mem[5]; ubyte unkcc[7];
 
 
