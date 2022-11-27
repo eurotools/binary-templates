@@ -73,12 +73,53 @@ typedef struct
     } breath_selected;
     uint health, gem_count, gem_counter;
 
-    ubyte a,b,c,d;
+    ubyte lock_pick_count,lock_pick_limit,a,b;
 
     struct element_storage { ubyte amount, carry_limit, magazine_limit, magazine_amount; };
     element_storage fire, ice, water, electric;
-
-    uint unkbb[(0x3a - 8) / 4];
+    
+    ushort fire_arrows_count;
+    ushort fire_arrows_limit;
+    
+    enum<uint> bool { off = 0, on = 1};
+    
+    struct
+    {
+        bool abiflg_unk_a : 1;
+        bool abiflg_unk_b : 1;
+        bool abiflg_unk_c : 1;
+        bool abiflg_unk_d : 1;
+        bool abiflg_unk_e : 1;
+        bool abiflg_unk_f : 1;
+        bool abiflg_unk_g : 1;
+        bool abiflg_unk_h : 1;
+        bool abiflg_unk_i : 1;
+        bool abiflg_unk_j : 1;
+        bool abiflg_unk_k : 1;
+        bool abiflg_unk_l : 1;
+        bool abiflg_unk_m : 1;
+        bool abiflg_butterfly_jar : 1;
+        bool abiflg_horndive_upgrade : 1;
+        bool abiflg_wall_kick : 1;
+        bool abiflg_wing_shield : 1;
+        bool abiflg_shop_sells_everything : 1;
+        bool abiflg_invincibility : 1;
+        bool abiflg_supercharge : 1;
+        bool abiflg_aqualung : 1;
+        bool abiflg_unk_n : 1;
+        bool abiflg_double_gem : 1;
+        bool abiflg_unk_o : 1;
+        bool abiflg_water_breath : 1;
+        bool abiflg_electric_breath : 1;
+        bool abiflg_ice_breath : 1;
+        bool abiflg_pole_spin : 1;
+        bool abiflg_unk_p : 1;
+        bool abiflg_hit_point_upgrade : 1;
+        bool abiflg_unk_q : 1;
+        bool abiflg_double_jump : 1;
+    } ability_flags;
+    
+    uint unkbb[0xA];
     ushort alignment;
     ubyte light_gems, dark_gems, eggs, more;
     ushort alignment_b;
