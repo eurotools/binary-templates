@@ -41,11 +41,11 @@ int three;
 
 struct
 {
-    ubyte pad <format=hex>; ubyte unkb[15] <format=hex>;
-    struct { int common_spyro_save_block[12/4] <format=hex>; } patterna[16] <format=hex>;
+    ubyte pad <format=hex>; ubyte unkb[15];
+    struct { int common_spyro_save_block[12/4] <format=hex>; } pattern_a[16] <format=hex>;
     ubyte unk[5 + 0x27 - 4] <format=hex>;
-    uint prev [(32/4) - 1]; uint count;
-    struct { int head <format=hex>; float x, y, z; int tail[(32/4)-3-1] <format=hex>; } patternb[count] <format=hex>;
+    ubyte uninitialized_mem[5]; ubyte unkcc[7]; float decimal_something; uint a,b,c; uint count;
+    struct { int head <format=hex>; float x, y, z; int tail[(32/4)-3-1] <format=hex>; } pattern_b[count] <format=hex>;
 
 } common_spyro_save_block;
 
