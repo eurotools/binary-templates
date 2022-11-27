@@ -43,7 +43,11 @@ struct
 {
     ubyte pad <format=hex>; ubyte unkb[15];
     struct { int edb_file_hc <format=hex>, zero, zero; } load_files[16] <format=hex>;
-    uint unk[2] <format=hex>; float one_hundred_decimal; uint unko[7] <format=hex>;
+    uint unk[2] <format=hex>;
+
+    float sfx_volume; uint music_volume; /* swy 0-100 */
+
+    uint unko[6] <format=hex>;
     ubyte uninitialized_mem[5]; ubyte unkcc[7];
 
 
@@ -81,7 +85,7 @@ typedef struct
     ushort fire_arrows_count;
     ushort fire_arrows_limit;
     
-    enum<uint> bool { off = 0, on = 1};
+    enum<uint> bool { off = 0, enabled = 1};
     
     struct
     {
