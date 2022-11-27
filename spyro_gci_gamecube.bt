@@ -35,16 +35,16 @@ struct
     ubyte slot_a, slot_b, slot_c; ubyte more[5]; char pad[0x1e38];
 } eurocom_head;
 
-char build_time[32];
-char build_date[32];
+char game_build_time[32];
+char game_build_date[32];
 int three;
 
 int common_spyro_save_block[400] <format=hex>;
 
-struct save_slot
+typedef struct
 {
-    ushort year; ubyte month, day; ubyte hour, minute, second, zero;
-    float play_time_in_secs; uint unk;
+    ushort year <bgcolor=0xfff>; ubyte month, day; ubyte hour, minute, second, zero;
+    float play_time_in_secs; uint pad;
 
     enum
     {
@@ -71,7 +71,8 @@ struct save_slot
 
     uint intro [31/4] <format=hex>; uint colr_count;
     struct { uint p <format=hex>; float x, y, z; uint a <format=hex>, e<format=hex>,i<format=hex>,o <format=hex>; } colr_blocks[colr_count];
-};
+} save_slot <read=Str("[Started %u-%02u-%02u %02u:%02u:%02u] [Played: %02u:%02u:%02u]", year, month, day, hour, minute, second,
+                                                                                        play_time_in_secs / (60 * 60), (play_time_in_secs % (60. * 60.)) / 60, play_time_in_secs % 60)>;
 
 
 FSeek(0x061A0); struct save_slot slot_a;
