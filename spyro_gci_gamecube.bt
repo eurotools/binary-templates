@@ -44,15 +44,17 @@ struct
     ubyte pad <format=hex>; ubyte unkb[15];
     struct { int edb_file_hc <format=hex>, zero, zero; } load_files[16] <format=hex>;
     uint unk[2] <format=hex>; float one_hundred_decimal; uint unko[7] <format=hex>;
-    ubyte uninitialized_mem[5]; ubyte unkcc[7]; float decimal_something; uint a, b, c;
+    ubyte uninitialized_mem[5]; ubyte unkcc[7];
 
-    uint count;
+
+    float decimal_something; uint a, b, c;
+    uint saved_count;
     struct
     {
         ushort id_a <format=hex>, id_b <format=hex>;
         float x, y, z;
-        int one <format=hex>, tail_b <format=hex>, startpoint_hc <format=hex>, text_prompt_hc <format=hex>;
-    } saved_blocks[count] <format=hex>;
+        int one <format=hex>, tail_b <format=hex>, start_point_hc <format=hex>, text_prompt_hc <format=hex>;
+    } saved_blocks[saved_count];
 
 } common_spyro_save_block;
 
@@ -103,7 +105,7 @@ typedef struct
 )>;
 
 
-FSeek(0x061A0); struct save_slot slot_a;
+FSeek(0x061A0); struct save_slot slot_a; /* swy: each slot has 0xb260 bytes of available space */
 FSeek(0x11400); struct save_slot slot_b;
 FSeek(0x1C660); struct save_slot slot_c;
 
