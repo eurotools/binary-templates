@@ -42,17 +42,17 @@ int three;
 struct
 {
     ubyte pad <format=hex>; ubyte unkb[15];
-    struct { int common_spyro_save_block[12/4] <format=hex>; } pattern_a[16] <format=hex>;
+    struct { int edb_file_hc <format=hex>, zero, zero; } load_files[16] <format=hex>;
     uint unk[(5 + 0x27 - 4)/4] <format=hex>;
     ubyte uninitialized_mem[5]; ubyte unkcc[7]; float decimal_something; uint a, b, c;
 
     uint count;
     struct
     {
-        int hashcode <format=hex>;
+        ushort id_a <format=hex>, id_b <format=hex>;
         float x, y, z;
-        int tail_a <format=hex>, tail_b <format=hex>, tail_c <format=hex>, tail_d <format=hex>;
-    } pattern_b[count] <format=hex>;
+        int tail_a <format=hex>, tail_b <format=hex>, startpoint_hc <format=hex>, text_prompt_hc <format=hex>;
+    } saved_blocks[count] <format=hex>;
 
 } common_spyro_save_block;
 
@@ -90,9 +90,9 @@ typedef struct
     uint saved_count;
     struct
     {
-        uint hashcode <format=hex>;
+        ushort id_a <format=hex>, id_b <format=hex>;
         float x, y, z;
-        int tail_a <format=hex>, tail_b <format=hex>, tail_c <format=hex>, tail_d <format=hex>;
+        int tail_a <format=hex>, tail_b <format=hex>, start_point_hc <format=hex>, text_prompt_hc <format=hex>;
     } saved_blocks[saved_count];
 
 } save_slot <read=Str(
