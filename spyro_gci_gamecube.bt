@@ -75,7 +75,7 @@ typedef struct
 
     ubyte lock_pick_count,lock_pick_limit,a,b;
 
-    struct element_storage { ubyte amount, carry_limit, magazine_limit, magazine_amount; };
+    typedef struct { ubyte amount, carry_limit, magazine_limit, magazine_amount; } element_storage <read=Str("[%02u/%02u, mag: %03u/%03u]", amount, carry_limit, magazine_amount, magazine_limit)>;
     element_storage fire, ice, water, electric;
     
     ushort fire_arrows_count;
