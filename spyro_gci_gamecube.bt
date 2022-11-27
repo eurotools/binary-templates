@@ -63,7 +63,7 @@ typedef struct
 
     uint unkbb[(0x3a - 8) / 4];
     ushort alignment;
-    ubyte dark_gems, light_gems, eggs, more;
+    ubyte light_gems, dark_gems, eggs, more;
     ushort alignment_b;
     uint unkcc[0x43b2 / 4];
 
@@ -71,8 +71,12 @@ typedef struct
 
     uint intro [31/4] <format=hex>; uint colr_count;
     struct { uint p <format=hex>; float x, y, z; uint a <format=hex>, e<format=hex>,i<format=hex>,o <format=hex>; } colr_blocks[colr_count];
-} save_slot <read=Str("[Started %u-%02u-%02u %02u:%02u:%02u] [Played: %02u:%02u:%02u]", year, month, day, hour, minute, second,
-                                                                                        play_time_in_secs / (60 * 60), (play_time_in_secs % (60. * 60.)) / 60, play_time_in_secs % 60)>;
+} save_slot <read=Str(
+    "[Started: %u-%02u-%02u %02u:%02u:%02u] [Played: %02u:%02u:%02u] [d:%02u/40 l:%03u/100 e:%02u/80]",
+    year, month, day, hour, minute, second,
+    play_time_in_secs / (60 * 60), (play_time_in_secs % (60. * 60.)) / 60, play_time_in_secs % 60,
+    dark_gems, light_gems, eggs
+)>;
 
 
 FSeek(0x061A0); struct save_slot slot_a;
