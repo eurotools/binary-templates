@@ -45,7 +45,7 @@ enum<uint> cam_mode     { passive,       active     };
 
 struct
 {
-    uint dont_know<format=hex>; uint zeco <format=hex>; ubyte unkb[12-4];
+    uint dont_know<format=hex>; uint zeco, zeco_slot_b <format=hex>; ubyte unkb[12-8];
     struct { int edb_file_hc <format=hex>, zero, zero; } load_files[16] <format=hex>;
 
     uint thingo, thingu;
@@ -56,7 +56,7 @@ struct
     bool rumble_feature;
     uint unk_setting_one;
 
-    ubyte uninitialized_mem[4]; uint dont_know_b <format=hex>; uint rev_one;
+    ubyte uninitialized_mem[4]; uint dont_know_b <format=hex>; uint rev_one <format=hex>;
 
 
     float decimal_something; uint unk_one, unk_thirty, unk_zero;
@@ -137,7 +137,7 @@ typedef struct
     float x, y, z; float zeroes[2]; float aa, bb;
     uint trigger_state_bitflags[(0x43b2 / 4) - 8];
 
-    struct { uint p[50 / 4] <format=hex>, e[50/4] <format=hex>; uint a <format=hex>; } huge_blocks[200];
+    struct { int a <format=hex>; int p[50/4] <format=hex>, e[50/4] <format=hex>; } huge_blocks[200];
 
     uint intro <format=hex>, zeco <format=hex>, longo <format=hex>; // zêçò
 
