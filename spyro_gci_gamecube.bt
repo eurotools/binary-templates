@@ -56,22 +56,25 @@ struct
     bool rumble_feature;
     uint unk_setting_one;
 
-    ubyte uninitialized_mem[4]; uint partial_checksum <format=hex>; uint rev_one <format=hex>;
-
-
-    float decimal_something; uint unk_one, unk_thirty, unk_zero;
-    uint saved_count;
-    struct
-    {
-        ushort id_a <format=hex>, id_b <format=hex>;
-        float x, y, z;
-        int one <format=hex>, tail_b <format=hex>, start_point_hc <format=hex>, text_prompt_hc <format=hex>;
-    } saved_blocks[saved_count];
+    ubyte uninitialized_mem[4];
 
 } common_spyro_save_block;
 
 typedef struct
 {
+
+    uint partial_slot_checksum <format=hex>, longo <format=hex>; // zêçò
+
+    float decimal_something; uint a, b, c;
+    uint saved_count;
+    struct saved_blocks
+    {
+        ushort id_a <format=hex>, id_b <format=hex>;
+        float x, y, z;
+        int one <format=hex>, tail_b <format=hex>, start_point_hc <format=hex>, text_prompt_hc <format=hex>;
+    } blocks[saved_count], unused_blocks[256-saved_count]; uint pad_align;
+
+
     ushort year <bgcolor=0xfff>; ubyte month, day; ubyte hour, minute, second, zero;
     float play_time_in_secs; uint pad;
 
@@ -141,16 +144,7 @@ typedef struct
 
     start_point huge_blocks[200];
 
-    uint intro <format=hex>, partial_slot_checksum <format=hex>, longo <format=hex>; // zêçò
-
-    float decimal_something; uint a, b, c;
-    uint saved_count;
-    struct
-    {
-        ushort id_a <format=hex>, id_b <format=hex>;
-        float x, y, z;
-        int one <format=hex>, tail_b <format=hex>, start_point_hc <format=hex>, text_prompt_hc <format=hex>;
-    } saved_blocks[saved_count];
+    uint intro <format=hex>;
 
 } save_slot <read=Str(
     "[Started: %u-%02u-%02u %02u:%02u:%02u] [Played: %02u:%02u:%02u] [d:%02u/40 l:%03u/100 e:%02u/80]",
@@ -160,9 +154,9 @@ typedef struct
 )>;
 
 
-FSeek(0x061A0); struct save_slot slot_a; /* swy: each slot has 0xb260 bytes of available space */
-FSeek(0x11400); struct save_slot slot_b;
-FSeek(0x1C660); struct save_slot slot_c;
+FSeek(0x04180); struct save_slot slot_a; /* swy: each slot has 0xb260 bytes of available space */
+FSeek(0x0f3e0); struct save_slot slot_b;
+FSeek(0x1A640); struct save_slot slot_c;
 
 
 
