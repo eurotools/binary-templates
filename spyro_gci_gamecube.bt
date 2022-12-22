@@ -129,8 +129,8 @@ typedef struct
         bool abiflg_double_jump : 1;
     } ability_flags;
     
-    uint unkbb[0xA];
-    ushort alignment;
+    uint unkbb[8] <format=hex>;
+    ushort thing, thong, thung, thang, zero_pad_maybe;
     ubyte light_gems, dark_gems, eggs, more;
     ushort alignment_b;
     uint zero;
