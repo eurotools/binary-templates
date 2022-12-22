@@ -45,7 +45,7 @@ enum<uint> cam_mode     { passive,       active     };
 
 struct
 {
-    uint dont_know<format=hex>; uint partial_slot_checksum_slot_a <format=hex>, partial_slot_checksum_slot_b <format=hex>; ubyte unkb[12-8];
+    uint slot_checksum_a <format=hex>, slot_checksum_b <format=hex>, slot_checksum_c <format=hex>; uint unk <format=hex>;
     struct { int edb_file_hc <format=hex>, zero, zero; } load_files[16] <format=hex>;
 
     uint thingo, thingu;
@@ -63,9 +63,9 @@ struct
 typedef struct
 {
 
-    uint partial_slot_checksum <format=hex>, longo <format=hex>; // zêçò
+    uint slot_checksum <format=hex>, version_maybe <format=hex>; // zêçò
 
-    float decimal_something; uint a, b, c;
+    float decimal_something; uint one, thirty, zero;
     uint saved_count;
     struct saved_blocks
     {
