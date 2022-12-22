@@ -45,21 +45,21 @@ enum<uint> cam_mode     { passive,       active     };
 
 struct
 {
-    ubyte pad <format=hex>; ubyte unkb[15];
+    uint dont_know<format=hex>; ubyte unkb[15 - 3];
     struct { int edb_file_hc <format=hex>, zero, zero; } load_files[16] <format=hex>;
 
     uint thingo, thingu;
     float sfx_volume; uint music_volume; /* swy 0-100 */
 
-    cam_reversal aa, sgt_byrd_y_axis, cc;
+    cam_reversal first_person_y_axis, sgt_byrd_y_axis, sparx_flying_y_axis;
     cam_mode camera;
     bool rumble_feature;
-    uint ff;
+    uint unk_one;
 
-    ubyte uninitialized_mem[5]; ubyte unkcc[7];
+    ubyte uninitialized_mem[4]; uint dont_know_b <format=hex>; uint rev_one;
 
 
-    float decimal_something; uint a, b, c;
+    float decimal_something; uint unk_one, unk_thirty, unk_zero;
     uint saved_count;
     struct
     {
