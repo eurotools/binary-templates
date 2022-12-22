@@ -45,16 +45,16 @@ enum<uint> cam_mode     { passive,       active     };
 
 struct
 {
-    uint slot_checksum_a <format=hex>, slot_checksum_b <format=hex>, slot_checksum_c <format=hex>; uint unk <format=hex>;
+    uint slot_checksum_a <format=hex>, slot_checksum_b <format=hex>, slot_checksum_c <format=hex>; uint slot_save_size <format=hex>;
     struct { int edb_file_hc <format=hex>, zero, zero; } load_files[16] <format=hex>;
 
-    uint thingo, thingu;
+    ushort unlocked_thing_a_maybe, unlocked_thing_b_maybe; uint thingu;
     float sfx_volume; uint music_volume; /* swy 0-100 */
 
     cam_reversal first_person_y_axis, sgt_byrd_y_axis, sparx_flying_y_axis;
     cam_mode camera;
     bool rumble_feature;
-    uint unk_setting_one;
+    enum player_character_id selected_bonus_character;
 
     ubyte uninitialized_mem[4];
 
@@ -62,10 +62,9 @@ struct
 
 typedef struct
 {
-
     uint slot_checksum <format=hex>, version_maybe <format=hex>; // zêçò
+    float decimal_something; uint player_char, thirty, zero;
 
-    float decimal_something; uint one, thirty, zero;
     uint saved_count;
     struct saved_blocks
     {
