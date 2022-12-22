@@ -45,7 +45,7 @@ enum<uint> cam_mode     { passive,       active     };
 
 struct
 {
-    uint dont_know<format=hex>; ubyte unkb[15 - 3];
+    uint dont_know<format=hex>; ubyte unkb[12];
     struct { int edb_file_hc <format=hex>, zero, zero; } load_files[16] <format=hex>;
 
     uint thingo, thingu;
@@ -54,7 +54,7 @@ struct
     cam_reversal first_person_y_axis, sgt_byrd_y_axis, sparx_flying_y_axis;
     cam_mode camera;
     bool rumble_feature;
-    uint unk_one;
+    uint unk_setting_one;
 
     ubyte uninitialized_mem[4]; uint dont_know_b <format=hex>; uint rev_one;
 
@@ -133,7 +133,9 @@ typedef struct
     ushort alignment;
     ubyte light_gems, dark_gems, eggs, more;
     ushort alignment_b;
-    uint unkcc[0x43b2 / 4];
+    uint zero;
+    float x, y, z;
+    uint unkcc[(0x43b2 / 4) - 4];
 
     struct { uint p[50 / 4] <format=hex>, e[50/4] <format=hex>; uint a; } huge_blocks[200];
 
