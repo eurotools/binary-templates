@@ -137,7 +137,9 @@ typedef struct
     float x, y, z; float zeroes[2]; float aa, bb;
     uint trigger_state_bitflags[(0x43b2 / 4) - 8];
 
-    struct { int a <format=hex>; int p[50/4] <format=hex>, e[50/4] <format=hex>; } huge_blocks[200];
+    typedef struct { int start_point_hashcode <format=hex>; int b; int p[10] <format=hex>, e[10] <format=hex>, e, f <format=hex>, g; } start_point <read=Str("[%x]", start_point_hashcode)>;
+
+    start_point huge_blocks[200];
 
     uint intro <format=hex>, zeco <format=hex>, longo <format=hex>; // zêçò
 
