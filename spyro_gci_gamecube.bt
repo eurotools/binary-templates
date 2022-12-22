@@ -45,7 +45,7 @@ enum<uint> cam_mode     { passive,       active     };
 
 struct
 {
-    uint dont_know<format=hex>; ubyte unkb[12];
+    uint dont_know<format=hex>; uint zeco <format=hex>; ubyte unkb[12-4];
     struct { int edb_file_hc <format=hex>, zero, zero; } load_files[16] <format=hex>;
 
     uint thingo, thingu;
@@ -134,12 +134,12 @@ typedef struct
     ubyte light_gems, dark_gems, eggs, more;
     ushort alignment_b;
     uint zero;
-    float x, y, z;
-    uint unkcc[(0x43b2 / 4) - 4];
+    float x, y, z; float zeroes[2]; float aa, bb;
+    uint trigger_state_bitflags[(0x43b2 / 4) - 8];
 
-    struct { uint p[50 / 4] <format=hex>, e[50/4] <format=hex>; uint a; } huge_blocks[200];
+    struct { uint p[50 / 4] <format=hex>, e[50/4] <format=hex>; uint a <format=hex>; } huge_blocks[200];
 
-    uint intro [3] <format=hex>;
+    uint intro <format=hex>, zeco <format=hex>, longo <format=hex>; // zêçò
 
     float decimal_something; uint a, b, c;
     uint saved_count;
