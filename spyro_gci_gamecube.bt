@@ -72,7 +72,12 @@ typedef struct
         Frosty_Flight = 12, Iced_TNT = 13, Mined_Out, Lava_Palaver, Sparx_Will_Fly = 16, Storming_the_Beach = 17, Credits = 18,
         Sunken_Ruins = 19, Cloudy_Domain = 20, Cloudy_Domain_b = 21, Dragonfly_Falls = 22, Dragon_Village = 23, Crocovile_Swamp = 24,
         MapR1LinkAB = 25, MapR1LinkAC = 26, MapExample = 27 /* swy: Hogwarts castle */, testdp = 28, MapMorphEnv = 29,
-        Dark_Mine = 30, Playroom = 36, Model_Viewer = 37
+        Dark_Mine = 30, Frostbite_Village = 31, Gnastys_Cave = 32, Ice_Citadel = 33, Reds_Lair = 34, Gloomy_Glacier = 35, Playroom = 36,
+        Model_Viewer = 37, Test_TL = 38, Test_PB = 39, Reds_Laboratory = 40, Reds_Chamber = 41, Test_MF = 42, Shop = 43,
+        Stormy_Beach = 44, Coastal_Remains = 45, MapR2LinkAB = 46, MapR2LinkAC = 47, Test_JS = 48, Test_KA = 49, Test_NB = 50,
+        Test_NB2 = 51, Test_SJ = 52, Platform_Area = 53 /*Inaccessible - probably removed*/, TestBeach = 54,
+        TestBall = 55 /*Inaccessible - probably removed*/, Titles = 56, MapR4LinkBC = 57, MapR4LinkCD = 58, MapR4LinkDE = 59,
+        Molten_Mount = 60, Magma_Falls_Top = 61, Magma_Falls_Ball_Gadget = 62, Magma_Falls_Bottom = 63, Watery_Tomb = 64
     } cur_map;
 
     uint zero;
