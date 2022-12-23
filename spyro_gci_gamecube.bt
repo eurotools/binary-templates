@@ -37,16 +37,20 @@ struct
 
 char game_build_time[32];
 char game_build_date[32];
-int three;
 
 enum<uint> bool         {     off = 0,  enabled = 1 };
 enum<uint> cam_reversal {  normal = 0, reversed = 1 };
 enum<uint> cam_mode     { passive,       active     };
 
+int slot_count; /* swy: three ¯\_(ツ)_/¯ */
 struct
 {
-    uint slot_checksum_a <format=hex>, slot_checksum_b <format=hex>, slot_checksum_c <format=hex>; uint slot_save_size <format=hex>;
-    struct { int edb_file_hc <format=hex>, zero, zero; } load_files[16] <format=hex>;
+    uint slot_checksum_a <format=hex>, /* swy: these don't actually work as normal checksums, */
+         slot_checksum_b <format=hex>, /*      the game only checks that slot_checksum_a == slot_a.slot_checksum on load, and so on */
+         slot_checksum_c <format=hex>;
+    uint slot_save_size  <format=hex>; /* swy: the game says 0xB258, I say 0xb260 */
+
+    struct { int edb_file_hc <format=hex>, zero, zero; } load_files[16] <format=hex>; /* swy: experiment with this. I don't know, yet */
 
     ushort unlocked_thing_a_maybe, unlocked_thing_b_maybe; uint unk_zero;
     float sfx_volume; uint music_volume; /* swy 0-100 */
@@ -54,15 +58,16 @@ struct
     cam_reversal first_person_y_axis, sgt_byrd_y_axis, sparx_flying_y_axis;
     cam_mode camera;
     bool rumble_feature;
-    enum player_character_id selected_bonus_character;
 
+    enum player_character_id selected_bonus_character;
     ubyte uninitialized_mem[4];
 
 } common_spyro_save_block;
 
 typedef struct
 {
-    uint slot_checksum <format=hex>; enum<ubyte> { slot_is_active = 1,  slot_empty = 0 } slot_active; ubyte zero_pad[3];
+    uint slot_checksum <format=hex>;
+    enum<ubyte> { slot_is_active = 1, slot_empty = 0 } slot_active; ubyte zero_pad[3];
     float decimal_something; uint player_char_maybe;
 
     enum
@@ -73,7 +78,7 @@ typedef struct
         /* 0x01000093 -  mr1_sgt.edb (Sgt Byrd minigame 1)              */ Island_Speedway         =  3,
         /* 0x01000094 -  mr1_spx.edb (Sparx minigame 1)                 */ Cavern_Chaos            =  4,
         /* 0x01000092 -  mr1_spy.edb (Spyro minigame 1)                 */ Critter_Calamity        =  5,
-        /* 0x010000C9  - mr2_blk.edb (Blink minigame 2)                 */ All_Washed_Up           =  6,
+        /* 0x010000C9 -  mr2_blk.edb (Blink minigame 2)                 */ All_Washed_Up           =  6,
         /* 0x010000D7 -  mr2_sgt.edb (Sgt Byrd minigame 2)              */ Cloudy_Speedway         =  7,
         /* 0x010000D6 -  mr2_spx.edb (Sparx minigame 2)                 */ Outlandish_Inlet        =  8,
         /* 0x01000098 -  mr2_spy.edb (Spyro minigame 2)                 */ Turtle_Turmoil          =  9,
@@ -87,7 +92,7 @@ typedef struct
         /* 0x010000BF -  mr4_spy.edb (Spyro minigame 4)                 */ Storming_the_Beach      = 17,
         /* 0x01       -         .edb                                    */ Credits                 = 18,
         /* 0x0100005A -  realm2b.edb (Sunken Ruins)                     */ Sunken_Ruins            = 19,
-        /* 0x0100005B  - realm2c.edb (Cloudy Domain)                    */ Cloudy_Domain           = 20,
+        /* 0x0100005B -  realm2c.edb (Cloudy Domain)                    */ Cloudy_Domain           = 20,
         /* 0x01       -         .edb                                    */ Cloudy_Domain_b         = 21,
         /* 0x0100003A -  realm1c.edb (Dragonfly Falls)                  */ Dragonfly_Falls         = 22,
         /* 0x01000037 -  realm1a.edb (Dragon Village)                   */ Dragon_Village          = 23,
@@ -160,7 +165,10 @@ typedef struct
 
     ubyte lock_pick_count,lock_pick_limit,a,b;
 
-    typedef struct { ubyte amount, carry_limit, magazine_limit, magazine_amount; } element_storage <read=Str("[%02u/%02u, mag: %03u/%03u]", amount, carry_limit, magazine_amount, magazine_limit)>;
+    typedef struct
+    {
+        ubyte amount, carry_limit, magazine_limit, magazine_amount;
+    } element_storage <read=Str("[%02u/%02u, mag: %03u/%03u]", amount, carry_limit, magazine_amount, magazine_limit)>;
     element_storage fire, ice, water, electric;
     
     ushort fire_arrows_count;
@@ -217,10 +225,10 @@ typedef struct
     uint intro <format=hex>;
 
 } save_slot <read=Str(
-    "[Started: %u-%02u-%02u %02u:%02u:%02u] [Played: %02u:%02u:%02u] [d:%02u/40 l:%03u/100 e:%02u/80]",
+    "[Started: %u-%02u-%02u %02u:%02u:%02u] [Played: %02u:%02u:%02u] [d:%02u/40 l:%03u/100 e:%02u/80] - %s",
     year, month, day, hour, minute, second,
     play_time_in_secs / (60 * 60), (play_time_in_secs % (60. * 60.)) / 60, play_time_in_secs % 60,
-    dark_gems, light_gems, eggs
+    dark_gems, light_gems, eggs, EnumToString(cur_map)
 )>;
 
 
@@ -228,7 +236,7 @@ FSeek(0x04180); struct save_slot slot_a; /* swy: each slot has 0xb260 bytes of a
 FSeek(0x0f3e0); struct save_slot slot_b;
 FSeek(0x1A640); struct save_slot slot_c;
 
-
+/* -- */
 
 enum player_character_id /* swy: provided by Ebbe */
 {
