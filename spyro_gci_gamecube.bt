@@ -62,10 +62,15 @@ struct
 
 typedef struct
 {
-    uint slot_checksum <format=hex>; enum<ubyte> { slot_is_active = 1,  empty = 0 } slot_active; ubyte zero_pad[3];
+    uint slot_checksum <format=hex>; enum<ubyte> { slot_is_active = 1,  slot_empty = 0 } slot_active; ubyte zero_pad[3];
     float decimal_something; uint player_char_maybe;
 
-    enum { MapLoading = 0, LoadingLoop2D = 1, Completely_Swamped = 2, Island_Speedway = 3, Cavern_Chaos = 4, Critter_Calamity = 5, Dragon_Village = 23, Crocovile_Swamp = 24, Dark_Mine = 30} cur_map;
+    enum
+    {
+        MapLoading = 0, LoadingLoop2D = 1, Completely_Swamped = 2, Island_Speedway = 3, Cavern_Chaos = 4, Critter_Calamity = 5, All_Washed_Up = 6, Cloudy_Speedway = 7,
+        Outlandish_Inlet = 8, Turtle_Turmoil = 9, Snowed_Under = 10, Iceberg_Aerobatics = 11, Frosty_Flight = 12, Iced_TNT = 13,
+        Dragon_Village = 23, Crocovile_Swamp = 24, Dark_Mine = 30
+    } cur_map;
 
     uint zero;
 
