@@ -69,8 +69,10 @@ typedef struct
     {
         MapLoading = 0, LoadingLoop2D = 1, Completely_Swamped = 2, Island_Speedway = 3, Cavern_Chaos = 4, Critter_Calamity = 5,
         All_Washed_Up = 6, Cloudy_Speedway = 7, Outlandish_Inlet = 8, Turtle_Turmoil = 9, Snowed_Under = 10, Iceberg_Aerobatics = 11,
-        Frosty_Flight = 12, Iced_TNT = 13, Mined_Out, Lava_Palaver, Sparx_Will_Fly = 16, Storming_the_Beach = 17, Credits = 18, Sunken_Ruins = 19, Cloudy_Domain = 20, Cloudy_Domain_b = 21, Dragonfly_Falls = 22,
-        Dragon_Village = 23, Crocovile_Swamp = 24, Dark_Mine = 30, Playroom = 36, Model_Viewer = 37
+        Frosty_Flight = 12, Iced_TNT = 13, Mined_Out, Lava_Palaver, Sparx_Will_Fly = 16, Storming_the_Beach = 17, Credits = 18,
+        Sunken_Ruins = 19, Cloudy_Domain = 20, Cloudy_Domain_b = 21, Dragonfly_Falls = 22,
+        Dragon_Village = 23, Crocovile_Swamp = 24, MapR1LinkAB = 25, MapR1LinkAC = 26, MapExample = 27, testdp = 28, MapMorphEnv = 29,
+        Dark_Mine = 30, Playroom = 36, Model_Viewer = 37
     } cur_map;
 
     uint zero;
