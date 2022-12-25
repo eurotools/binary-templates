@@ -220,9 +220,9 @@ typedef struct
 
     typedef struct { int start_point_hashcode <format=hex>; int b; int p[10] <format=hex>, e[10] <format=hex>, e, f <format=hex>, g; } start_point <read=Str("[%x]", start_point_hashcode)>;
 
-    start_point huge_blocks[200];
+    start_point start_point_for_level[200]; /* swy: there's one start point set for level; e.g. if the current map is Dragon_Village (23), the game uses the array element on index 23, each fairy check/restart point is tagged with an unique hashcode: 0x4A000005, 0x4A000006, ... */
 
-    uint intro <format=hex>;
+    uint end_align_padding <format=hex>;
 
 } save_slot <read=Str(
     "[Started: %u-%02u-%02u %02u:%02u:%02u] [Played: %02u:%02u:%02u] [d:%02u/40 l:%03u/100 e:%02u/80] - %s",
