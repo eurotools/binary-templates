@@ -1,0 +1,23 @@
+//------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: EurocomIMA.bt
+//   Authors: jmarti856 and Swyter
+//   Version: 1.0
+//   Purpose: See the structure of the custom-made Eurocom IMA ADPCM files.
+//  Category: Audio
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+struct encoded_block
+{
+    short valpred; byte index, unk_pad; 
+    struct sample_byte
+    { 
+        byte sample_a : 4,
+             sample_b : 4; 
+    } samples[56 / 2 /* = 28 pairs of nibbles */];
+};
+
+struct encoded_block blocks [FileSize() / sizeof(struct encoded_block)];
