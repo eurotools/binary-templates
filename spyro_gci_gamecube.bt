@@ -53,7 +53,7 @@ struct
     struct { int edb_file_hc <format=hex>, zero, zero; } load_files[16] <format=hex>; /* swy: experiment with this. I don't know, yet */
 
     ushort unlocked_thing_a_maybe,
-           unlocked_thing_b_maybe; /* swy: zero: no unlockables; 1, concept art viewer */
+           unlocked_thing_b_maybe; /* swy: zero: no unlockables; 1, concept art viewer, 2 model viewer/ember, 4 also character select top three, 8/0b1000 spyro/flame/ember, 0b10000 play minigame */
     uint unk_zero;
     float sfx_volume; uint music_volume; /* swy 0-100 */
 
