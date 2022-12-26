@@ -52,7 +52,9 @@ struct
 
     struct { int edb_file_hc <format=hex>, zero, zero; } load_files[16] <format=hex>; /* swy: experiment with this. I don't know, yet */
 
-    ushort unlocked_thing_a_maybe, unlocked_thing_b_maybe; uint unk_zero;
+    ushort unlocked_thing_a_maybe,
+           unlocked_thing_b_maybe; /* swy: zero: no unlockables; 1, concept art viewer */
+    uint unk_zero;
     float sfx_volume; uint music_volume; /* swy 0-100 */
 
     cam_reversal first_person_y_axis, sgt_byrd_y_axis, sparx_flying_y_axis;
@@ -218,11 +220,16 @@ typedef struct
     float x, y, z; float zeroes[2]; float aa, bb;
     uint trigger_state_bitflags[(0x43b2 / 4) - 8];
 
-    typedef struct { int start_point_hashcode <format=hex>; int b; int p[10] <format=hex>, e[10] <format=hex>, e, f <format=hex>, g; } start_point <read=Str("[%x]", start_point_hashcode)>;
+    typedef struct
+    {
+        int start_point_hashcode <format=hex>;
+        int one_or_zero;
+        int p[10] <format=hex>, e[10] <format=hex>, one_or_zero_b, f <format=hex>, g;
+    } start_point <read=Str("[%x]", start_point_hashcode)>;
 
     start_point start_point_for_level[200]; /* swy: there's one start point set for level; e.g. if the current map is Dragon_Village (23), the game uses the array element on index 23, each fairy check/restart point is tagged with an unique hashcode: 0x4A000005, 0x4A000006, ... */
 
-    uint end_align_padding <format=hex>;
+    uint alignment_pad_end <format=hex>;
 
 } save_slot <read=Str(
     "[Started: %u-%02u-%02u %02u:%02u:%02u] [Played: %02u:%02u:%02u] [d:%02u/40 l:%03u/100 e:%02u/80] - %s",
