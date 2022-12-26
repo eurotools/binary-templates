@@ -52,17 +52,26 @@ struct
 
     struct { int edb_file_hc <format=hex>, zero, zero; } load_files[16] <format=hex>; /* swy: experiment with this. I don't know, yet */
 
-    byte zero;
-    struct { byte unk : 1; byte unk : 1; byte unk : 1; byte character_select_flame_ember_model_viewer_play_minigame : 1;  byte character_select_flame_ember_model_viewer : 1;  byte character_select_ember_model_viewer : 1;  byte model_viewer : 1;  byte concept_art_viewer : 1; } unlocked_extras;
-    ushort unlocked_thing_b_maybe; /* swy: zero: no unlockables; 1, concept art viewer, 2 model viewer/ember, 4 also character select top three, 8/0b1000 spyro/flame/ember, 0b10000 play minigame */
-    uint unk_zero;
+    byte unk_zero_a;
+    struct
+    {
+        byte unk : 1; byte unk : 1; byte unk : 1;
+        byte character_select_flame_ember_model_viewer_play_minigame : 1;
+        byte character_select_flame_ember_model_viewer : 1; 
+        byte character_select_ember_model_viewer : 1;
+        byte model_viewer : 1;
+        byte concept_art_viewer : 1;
+    } unlocked_extras; /* swy: zero: no unlockables; 1, concept art viewer, 2 model viewer/ember, 4 also character select top three, 8/0b1000 spyro/flame/ember, 0b10000 play minigame */
+    ushort unlocked_thing_b_maybe;
+    uint unk_zero_b;
+
     float sfx_volume; uint music_volume; /* swy 0-100 */
 
     cam_reversal first_person_y_axis, sgt_byrd_y_axis, sparx_flying_y_axis;
     cam_mode camera;
     bool rumble_feature;
 
-    enum player_character_id selected_bonus_character;
+    enum player_character_id selected_bonus_character_maybe;
     ubyte uninitialized_mem[4];
 
 } common_spyro_save_block;
