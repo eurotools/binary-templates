@@ -107,8 +107,8 @@ typedef struct
         /* 0x0100005B -  realm2c.edb (Cloudy Domain)                    */ Cloudy_Domain           = 20,
         /* 0x01       -         .edb                                    */ Cloudy_Domain_b         = 21,
         /* 0x0100003A -  realm1c.edb (Dragonfly Falls)                  */ Dragonfly_Falls         = 22,
-        /* 0x01000037 -  realm1a.edb (Dragon Village)                   */ Dragon_Village          = 23,
-        /* 0x01000039 -  realm1b.edb (Crocovile Swamp)                  */ Crocovile_Swamp         = 24,
+        /* 0x01000039 -  realm1b.edb (Crocovile Swamp)                  */ Crocovile_Swamp         = 23,
+        /* 0x01000037 -  realm1a.edb (Dragon Village)                   */ Dragon_Village          = 24,
         /* 0x0100006D - r1linkab.edb (Link map: DV to CS)               */ MapR1LinkAB             = 25,
         /* 0x01000082 - r1linkac.edb (Link map: DV to DF (ball gadget)) */ MapR1LinkAC             = 26,
         /* 0x01000008 - hogwarts.edb                                    */ MapExample              = 27, /* swy: Hogwarts castle */
