@@ -1,0 +1,157 @@
+//------------------------------------------------
+//--- 010 Editor v11.0.1 Binary Template
+//
+//      File: SpyroStreamSounds.bt
+//   Authors: jmarti856
+//   Version: 1.0
+//   Purpose: Parse SFX Streambanks files.
+//  Category: Audio
+// File Mask: *.sfx
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+ 
+//*===============================================================================================
+//* Typedefs for the sfx file
+//*===============================================================================================
+typedef char ID[4];
+typedef char Padding[2];
+local int sfxIsBigEndian;
+
+//*===============================================================================================
+//* DEFINE STRUCTS USED IN THE SFX FILE
+//*===============================================================================================
+//The first parameters of the header ara always little endian
+LittleEndian(); 
+sfxIsBigEndian = 0;
+
+typedef struct 
+{
+    ID     Magic;
+    uint   Hashcode<format=hex>;
+    uint   ConstantOffset<format=hex>;
+    uint   FileSize;
+	ID     Platform;
+	uint   TimeSpan;
+	uint   unk;
+	uint   structPadding;
+	/*For GC*/
+	if (ReadUInt() == 0x0800)
+	{
+		LittleEndian();
+	}
+	else
+	{
+		sfxIsBigEndian = 1;
+		BigEndian();		
+	}
+} CommonHeader;
+
+typedef struct
+{
+	uint	FileStart1<format=hex>;
+	uint 	FileStart1Length;
+	uint 	FileStart2<format=hex>;
+	uint	FileStart2Length;
+	uint	FileStart3<format=hex>;
+	uint	FileStart3Length;
+} StreamBanksHeader;
+
+typedef struct
+{
+	uint 	posOffset<format=hex>;
+} SBLookUpTable;
+
+typedef struct
+{
+	uint MarkerSize;
+	uint AudioOffset;
+	uint AudioSize;
+	uint StartMarkerCount;
+	uint MarkerCount;
+	uint StartMarkerOffset;
+	uint MarkerOffset;
+	uint BaseVolume;
+}soundDetails;
+
+typedef struct
+{
+	int Name;
+	uint Position;
+	uint MarkerType;
+	uint LoopStart;
+	uint LoopMarkerCount;
+} Marker;
+
+typedef struct
+{
+	uint Name;
+	uint Position;
+	uint MarkerType;
+	uint LoopStart;
+	uint LoopMarkerCount;
+	uint MarkerPosition;
+}StartMarker;
+
+//*===============================================================================================
+//* READ FILE
+//*===============================================================================================
+// Define the headers
+SetBackColor(cLtPurple);
+CommonHeader header;
+
+// Check for valid header
+if(header.Magic != "MUSX")
+{
+    Warning( "File is not a valid SFX file. Template stopped." );
+    return -1;
+}
+
+// Read Streambanks Header
+SetBackColor(cGreen);
+StreamBanksHeader SBHeader;
+
+//Go to FileStart1 pos
+if (FSeek(SBHeader.FileStart1) < 0)
+{
+	Warning( "Error searching the SFX file start 1 position");
+	return -1;
+}
+
+local uint totalSounds = SBHeader.FileStart1Length / 4;
+local uint index = 0;
+local uint markersCount = 0;
+local long currentPos = 0;
+for (index = 0; index < totalSounds; index++)
+{
+	SetBackColor(cBlue);
+	SBLookUpTable offsets;
+	currentPos = FTell();
+	
+	//Sound details (Go to FileStart2)
+	FSeek(offsets.posOffset + SBHeader.FileStart2);
+	SetBackColor(cLtRed);
+	soundDetails details;
+	
+	//Markers
+	for (markersCount = 0; markersCount < details.StartMarkerCount; markersCount++)
+	{
+		SetBackColor(cAqua);
+		StartMarker sMarkers;
+	}
+	
+	//Start Markers
+	for (markersCount = 0; markersCount < details.MarkerCount; markersCount++)
+	{
+		SetBackColor(cLtGreen);
+		Marker markers;
+	}
+	
+	//Read Audio Data
+	FSeek(details.AudioOffset + SBHeader.FileStart2);
+	SetBackColor(cDkRed);
+	struct {byte audioData[details.AudioSize]; } a;
+	
+	//Return to prev position (FileStart1)
+	FSeek(currentPos);
+}

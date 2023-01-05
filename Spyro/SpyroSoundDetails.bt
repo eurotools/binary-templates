@@ -1,0 +1,75 @@
+//------------------------------------------------
+//--- 010 Editor v11.0.1 Binary Template
+//
+//      File: SpyroProjectDetails.bt
+//   Authors: jmarti856
+//   Version: 1.0
+//   Purpose: Parse Temporal SFX files.
+//  Category: Audio
+// File Mask: *.sfx
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+//*===============================================================================================
+//* Typedefs for the sfx file
+//*===============================================================================================
+typedef char ID[4];
+
+//*===============================================================================================
+//* DEFINE STRUCTS USED IN THE SFX FILE
+//*===============================================================================================
+//The first parameters of the header ara always little endian
+LittleEndian(); 
+
+typedef struct 
+{
+    ID     Magic;
+    uint   Hashcode<format=hex>;
+    uint   FileVersion<format=hex>;
+    uint   FileSize;
+	ID     Platform;
+	uint   TimeSpan;
+	uint   unk;
+	uint   structPadding;
+} CommonHeader;
+
+typedef struct
+{
+	uint	MinHashCode<format=hex>;
+	uint 	MaxhashCode<format=hex>;
+	uint	Padding[1];
+} HashCodesLimits;
+
+typedef struct
+{
+	uint 	MusicLooping;
+	uint 	Uservalue;
+	uint 	MusicHashCode<format=hex>;
+} MusicData;
+
+//*===============================================================================================
+//* READ FILE
+//*===============================================================================================
+// Define the headers
+SetBackColor(cLtPurple);
+CommonHeader header;
+
+// Check for valid header
+if(header.Magic != "MUSX")
+{
+    Warning( "File is not a valid SFX file. Template stopped." );
+    return -1;
+}
+
+//Read the minimum and maximum hashcode
+SetBackColor(cGreen);
+HashCodesLimits data;
+
+local int TotalItems = (header.FileSize - 48)/12;
+local int index = 0;
+
+SetBackColor(cBlue);
+for(index = 0; index < TotalItems; index++)
+{
+	MusicData musData;
+}

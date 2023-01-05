@@ -1,0 +1,125 @@
+//------------------------------------------------
+//--- 010 Editor v11.0.1 Binary Template
+//
+//      File: SpyroProjectDetails.bt
+//   Authors: jmarti856
+//   Version: 1.0
+//   Purpose: Parse Temporal SFX files.
+//  Category: Audio
+// File Mask: *.sfx
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+//*===============================================================================================
+//* Typedefs for the sfx file
+//*===============================================================================================
+typedef char ID[4];
+typedef char Padding[2];
+
+//*===============================================================================================
+//* DEFINE STRUCTS USED IN THE SFX FILE
+//*===============================================================================================
+//The first parameters of the header ara always little endian
+LittleEndian(); 
+
+typedef struct 
+{
+    ID     Magic;
+    uint   Hashcode<format=hex>;
+    uint   FileVersion<format=hex>;
+    uint   FileSize;
+	ID     Platform;
+	uint   TimeSpan;
+	uint   unk;
+	uint   structPadding;
+} CommonHeader;
+
+
+typedef struct
+{
+	uint	MemoryStart<format=hex>;
+	uint 	MemoryLength;
+} SpecificFileHeader;
+
+typedef struct
+{
+	uint MemSlotsCount;
+	uint MemSlotsOffset;
+	uint SoundBanksCount;
+	uint SoundBanksOffset;
+} DataOffsets;
+
+typedef struct
+{
+	uint	SlotNumber;
+	uint 	MemorySize;
+	uint 	Quantity;
+} MemorySlots;
+
+typedef struct
+{
+	uint     HashCode;
+	uint     SlotNum;
+} SoundbankSlot;
+
+typedef struct
+{
+	uint     StereoStreamCount;
+	uint     MonoStreamCount;
+	uint     ProjectCode;
+	int      Flags[10];
+} ProjectFlags;
+
+//*===============================================================================================
+//* READ FILE
+//*===============================================================================================
+// Define the headers
+SetBackColor(cLtPurple);
+CommonHeader header;
+
+// Check for valid header
+if(header.Magic != "MUSX")
+{
+    Warning( "File is not a valid SFX file. Template stopped." );
+    return -1;
+}
+
+// Read Soundbanks Header
+SetBackColor(cGreen);
+SpecificFileHeader specHeader;
+
+//Go to MemoryStart pos
+if (FSeek(specHeader.MemoryStart) < 0)
+{
+	Warning( "Error searching the SFX start position");
+	return -1;
+}
+
+//Get Offsets
+SetBackColor(cBlue);
+DataOffsets posOffsets;
+local long currentPos = FTell();
+
+//Get Memmory Slots
+FSeek(specHeader.MemoryStart + posOffsets.MemSlotsOffset);
+local int index = 0;
+for (index = 0; index < posOffsets.MemSlotsCount; index++)
+{
+	SetBackColor(cLtRed);
+    MemorySlots memSlots;
+}
+
+//Get SoundBanks Slots
+FSeek(specHeader.MemoryStart + posOffsets.SoundBanksOffset);
+index = 0;
+for (index = 0; index < posOffsets.SoundBanksCount; index++)
+{
+	SetBackColor(cAqua);
+    SoundbankSlot soundBank;
+}
+
+//Get Flags Count
+FSeek(currentPos + 16);
+index = 0;
+SetBackColor(cDkRed);
+ProjectFlags data;
