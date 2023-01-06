@@ -61,9 +61,9 @@ typedef struct
 
 typedef struct
 {
-	uint MarkerSize;
+	uint MarkerSize  <format=hex>;
 	uint AudioOffset <format=hex>;
-	uint AudioSize;
+	uint AudioSize   <format=hex>;
 
 	uint StartMarkerCount;
 	uint      MarkerCount;
@@ -72,8 +72,6 @@ typedef struct
 	uint      MarkerOffset <format=hex>;
 
 	uint BaseVolume;
-
-    
 
     typedef struct
     {
@@ -100,18 +98,10 @@ typedef struct
     SetBackColor(cLtGreen);
     Marker Markers[MarkerCount];
 
+    /* swy: the audio data is far away; get there via offset, store as part of our SFX struct and go back */
+	FSeek(SBHeader.FileStart2 + AudioOffset); SetBackColor(cDkRed); byte AudioData[AudioSize];
 
-    local uint curPos = FTell();
-
-    //Read Audio Data
-	FSeek(SBHeader.FileStart2 + AudioOffset); SetBackColor(cDkRed);
-
-    byte AudioData[details.AudioSize];
-	
-	//Return to prev position (FileStart1)
-	FSeek(curPos);
-
-} soundDetails;
+} StreamedSound <read=Str("startmarkers: %u, markers: %u, bufsize: %#x", StartMarkerCount, MarkerCount, AudioSize)>;
 
 
 //*===============================================================================================
@@ -124,7 +114,7 @@ CommonHeader header;
 // Check for valid header
 if(header.Magic != "MUSX")
 {
-    Warning( "File is not a valid SFX file. Template stopped." );
+    Warning("File is not a valid SFX file. Template stopped.");
     return -1;
 }
 
@@ -139,20 +129,17 @@ if (FSeek(SBHeader.FileStart1) < 0)
 	return -1;
 }
 
-local uint totalSounds = SBHeader.FileStart1Length / 4;
+local uint totalSounds = SBHeader.FileStart1Length / sizeof(SBLookUpTable);
 local uint index = 0;
-local uint markersCount = 0;
-local long currentPos = 0;
 
 SetBackColor(cBlue);
 SBLookUpTable offsets[totalSounds];
 
-
 for (index = 0; index < totalSounds; index++)
 {
 	//Sound details (Go to FileStart2)
-	FSeek(offsets[index].posOffset + SBHeader.FileStart2);
+	FSeek(SBHeader.FileStart2 + offsets[index].posOffset);
 
     SetBackColor(cLtRed);
-	soundDetails details;
+	StreamedSound stream;
 }
