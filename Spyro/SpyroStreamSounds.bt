@@ -2,13 +2,12 @@
 //--- 010 Editor v11.0.1 Binary Template
 //
 //      File: SpyroStreamSounds.bt
-//   Authors: jmarti856
+//   Authors: jmarti856, Swyter
 //   Version: 1.0
 //   Purpose: Parse SFX Streambanks files.
 //  Category: Audio
-// File Mask: *.sfx
-//  ID Bytes: 
-//   History: 
+// File Mask: *__streamdata.sfx
+//  ID Bytes: 4D 55 53 58
 //------------------------------------------------
  
 //*===============================================================================================
@@ -28,8 +27,8 @@ sfxIsBigEndian = 0;
 typedef struct 
 {
     ID     Magic;
-    uint   Hashcode<format=hex>;
-    uint   ConstantOffset<format=hex>;
+    uint   Hashcode <format=hex>;
+    uint   ConstantOffset <format=hex>;
     uint   FileSize;
 	ID     Platform;
 	uint   TimeSpan;
@@ -49,34 +48,34 @@ typedef struct
 
 typedef struct
 {
-	uint	FileStart1<format=hex>;
+	uint	FileStart1 <format=hex>;
 	uint 	FileStart1Length;
-	uint 	FileStart2<format=hex>;
+	uint 	FileStart2 <format=hex>;
 	uint	FileStart2Length;
-	uint	FileStart3<format=hex>;
+	uint	FileStart3 <format=hex>;
 	uint	FileStart3Length;
 } StreamBanksHeader;
 
 typedef struct
 {
-	uint 	posOffset<format=hex>;
+	uint 	posOffset <format=hex>;
 } SBLookUpTable;
 
 typedef struct
 {
 	uint MarkerSize;
-	uint AudioOffset;
+	uint AudioOffset <format=hex>;
 	uint AudioSize;
 	uint StartMarkerCount;
 	uint MarkerCount;
-	uint StartMarkerOffset;
-	uint MarkerOffset;
+	uint StartMarkerOffset <format=hex>;
+	uint MarkerOffset <format=hex>;
 	uint BaseVolume;
 }soundDetails;
 
 typedef struct
 {
-	int Name;
+	 int Name;
 	uint Position;
 	uint MarkerType;
 	uint LoopStart;
