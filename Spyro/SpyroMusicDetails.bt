@@ -45,7 +45,7 @@ typedef struct
 	float 	DurationInSeconds;
 	uint 	MusicLooping;
 	uint 	Uservalue;
-} MusicData <read=Str("%#10x | %fs looping: %u user: %u", MusicHashCode, DurationInSeconds, MusicLooping, Uservalue)>;
+} MusicData <read=Str("%#010x | %fs looping: %u user: %u", MusicHashCode, DurationInSeconds, MusicLooping, Uservalue)>;
 
 //*===============================================================================================
 //* READ FILE
