@@ -41,8 +41,8 @@ typedef struct
 
 typedef struct
 {
-	ushort InnerRadius, OuterRadius; float Duration; ubyte Looping,Tracking3d,SampleStreamed,OutWater;
-} SoundData <read=Str(" %u %u %f - %u/%u/%u/%u", InnerRadius, OuterRadius, Duration, Looping, Tracking3d, SampleStreamed, OutWater)>;
+	ushort InnerRadius, OuterRadius; float Duration; ubyte Looping,Tracking3d,SampleStreamed,Is3D;
+} SoundData <read=Str(" %u %u %f - %u/%u/%u/%u", InnerRadius, OuterRadius, Duration, Looping, Tracking3d, SampleStreamed, Is3D)>;
 
 //*===============================================================================================
 //* READ FILE
