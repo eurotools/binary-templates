@@ -37,9 +37,9 @@ typedef struct
 
 typedef struct
 {
-	uint	MemoryStart<format=hex>;
+	uint	MemoryStart <format=hex>;
 	uint 	MemoryLength;
-} SpecificFileHeader;
+} SpecificFileHeader <read=Str("memstart: %#x total_len: %#x", MemoryStart, MemoryLength)>;
 
 typedef struct
 {
@@ -47,20 +47,20 @@ typedef struct
 	uint MemSlotsOffset;
 	uint SoundBanksCount;
 	uint SoundBanksOffset;
-} DataOffsets;
+} DataOffsets <read=Str("memslots: %u at +%#x, soundbanks: %u at +%#x", MemSlotsCount, MemSlotsOffset, SoundBanksCount, SoundBanksOffset)>;
 
 typedef struct
 {
 	uint	SlotNumber;
 	uint 	MemorySize;
 	uint 	Quantity;
-} MemorySlots;
+} MemorySlots <read=Str("slot %u | size: %4u, quant: %u", SlotNumber, MemorySize, Quantity)>;
 
 typedef struct
 {
 	uint     HashCode;
 	uint     SlotNum;
-} SoundbankSlot;
+} SoundbankSlot <read=Str("%#010x | slot: %u", HashCode, SlotNum)>;
 
 typedef struct
 {
@@ -95,13 +95,15 @@ if (FSeek(specHeader.MemoryStart) < 0)
 	return -1;
 }
 
-//Get Offsets
-SetBackColor(cBlue);
-DataOffsets posOffsets;
-local long currentPos = FTell();
 
-//Get Memmory Slots
-FSeek(specHeader.MemoryStart + posOffsets.MemSlotsOffset);
+//Get Offsets
+DataOffsets posOffsets; SetBackColor(cNone); ubyte pad[16];
+
+//Get Flags Count
+SetBackColor(cDkRed); ProjectFlags data_maybe; /* swy: these must be wrong, they overlay with the memory slot data that comes afterwards */
+
+//Get Memory Slots
+FSeek(specHeader.MemoryStart + posOffsets.MemSlotsOffset); SetBackColor(cBlue);
 local int index = 0;
 for (index = 0; index < posOffsets.MemSlotsCount; index++)
 {
@@ -117,9 +119,3 @@ for (index = 0; index < posOffsets.SoundBanksCount; index++)
 	SetBackColor(cAqua);
     SoundbankSlot soundBank;
 }
-
-//Get Flags Count
-FSeek(currentPos + 16);
-index = 0;
-SetBackColor(cDkRed);
-ProjectFlags data;
