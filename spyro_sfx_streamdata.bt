@@ -82,10 +82,7 @@ if (FSeek(SBHeader.FileStart1) < 0)
 }
 
 
-typedef struct
-{
-	uint posOffset <format=hex>;
-} SBLookUpTable;
+typedef uint SBLookUpTable <format=hex>;
 
 local uint totalSounds = SBHeader.FileStart1Length / sizeof(SBLookUpTable);
 local uint index = 0;
@@ -97,7 +94,7 @@ for (index = 0; index < totalSounds; index++)
 {
 	/* swy: use the lookup table for the current index to compute
             an absolute offset to the right place */
-	FSeek(SBHeader.FileStart2 + offsets[index].posOffset);
+	FSeek(SBHeader.FileStart2 + offsets[index]);
 
     typedef struct
     {
@@ -105,6 +102,9 @@ for (index = 0; index < totalSounds; index++)
 	    uint AudioOffset <format=hex>;
 	    uint AudioSize   <format=hex>;
     
+        /* swy: the following two offsets are relative to this point; the offsets are technically
+                not needed, as long as we know the structure sizes and count, because they
+                are always continuously stored, right afterwards */
 	    uint StartMarkerCount;
 	    uint      MarkerCount;
     
@@ -123,7 +123,7 @@ for (index = 0; index < totalSounds; index++)
 	        uint MarkerPosition;
         } StartMarker;
     
-        SetBackColor(cAqua);
+        SetBackColor(cAqua); FSeek(startof(StartMarkerCount) + StartMarkerOffset);
         StartMarker StartMarkers[StartMarkerCount];
     
         typedef struct
@@ -135,7 +135,7 @@ for (index = 0; index < totalSounds; index++)
 	        uint LoopMarkerCount;
         } Marker;
     
-        SetBackColor(cLtGreen);
+        SetBackColor(cLtGreen); FSeek(startof(StartMarkerCount) + MarkerOffset);
         Marker Markers[MarkerCount];
     
         /* swy: the audio data is far away; get there via offset, store as part of our SFX struct and go back */
