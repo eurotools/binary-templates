@@ -64,31 +64,59 @@ typedef struct
 	uint MarkerSize;
 	uint AudioOffset <format=hex>;
 	uint AudioSize;
+
 	uint StartMarkerCount;
-	uint MarkerCount;
+	uint      MarkerCount;
+
 	uint StartMarkerOffset <format=hex>;
-	uint MarkerOffset <format=hex>;
+	uint      MarkerOffset <format=hex>;
+
 	uint BaseVolume;
-}soundDetails;
 
-typedef struct
-{
-	 int Name;
-	uint Position;
-	uint MarkerType;
-	uint LoopStart;
-	uint LoopMarkerCount;
-} Marker;
+    
 
-typedef struct
-{
-	uint Name;
-	uint Position;
-	uint MarkerType;
-	uint LoopStart;
-	uint LoopMarkerCount;
-	uint MarkerPosition;
-}StartMarker;
+    typedef struct
+    {
+	    uint Name;
+	    uint Position;
+	    uint MarkerType;
+	    uint LoopStart;
+	    uint LoopMarkerCount;
+	    uint MarkerPosition;
+    } StartMarker;
+
+    SetBackColor(cAqua);
+    StartMarker StartMarkers[StartMarkerCount];
+
+    typedef struct
+    {
+	     int Name;
+	    uint Position;
+	    uint MarkerType;
+	    uint LoopStart;
+	    uint LoopMarkerCount;
+    } Marker;
+
+    SetBackColor(cLtGreen);
+    Marker Markers[MarkerCount];
+
+
+    local uint curPos = FTell();
+
+    //Read Audio Data
+	FSeek(SBHeader.FileStart2 + AudioOffset); SetBackColor(cDkRed);
+
+    byte AudioData[details.AudioSize];
+	
+	//Return to prev position (FileStart1)
+	FSeek(curPos);
+
+
+} soundDetails;
+
+
+
+
 
 //*===============================================================================================
 //* READ FILE
@@ -129,26 +157,7 @@ for (index = 0; index < totalSounds; index++)
 	FSeek(offsets.posOffset + SBHeader.FileStart2);
 	SetBackColor(cLtRed);
 	soundDetails details;
-	
-	//Markers
-	for (markersCount = 0; markersCount < details.StartMarkerCount; markersCount++)
-	{
-		SetBackColor(cAqua);
-		StartMarker sMarkers;
-	}
-	
-	//Start Markers
-	for (markersCount = 0; markersCount < details.MarkerCount; markersCount++)
-	{
-		SetBackColor(cLtGreen);
-		Marker markers;
-	}
-	
-	//Read Audio Data
-	FSeek(details.AudioOffset + SBHeader.FileStart2);
-	SetBackColor(cDkRed);
-	struct {byte audioData[details.AudioSize]; } a;
-	
+
 	//Return to prev position (FileStart1)
 	FSeek(currentPos);
 }
