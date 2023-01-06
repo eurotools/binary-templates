@@ -82,7 +82,7 @@ typedef struct
     enum<ubyte> { slot_is_active = 1, slot_empty = 0 } slot_active; ubyte zero_pad[3];
     float decimal_something; uint player_char_maybe;
 
-    enum
+    enum map_list
     {
         /* 0x01       -         .edb                                    */ MapLoading              =  0,
         /* 0x01       -         .edb                                    */ LoadingLoop2D           =  1,
@@ -240,7 +240,7 @@ typedef struct
             int lvl_darkgem_tally, lvl_lightgem_tally, lvl_egg_conceptart_tally, lvl_egg_charviewer_tally, lvl_egg_ember_tally, lvl_egg_flame_tally, lvl_egg_blink_tally, lvl_egg_turret_tally, lvl_egg_sparx_tally, lvl_egg_blink_tally;
         } level_collectible_tallies;
         int one_or_zero_b, f <format=hex>, g;
-    } start_point <read=Str("[%x]", start_point_hashcode)>;
+    } start_point <read=Str("[%x] - %s", start_point_hashcode, EnumToString(cur_map))>;
 
     start_point start_point_for_level[200]; /* swy: there's one start point set for level; e.g. if the current map is Dragon_Village (23), the game uses the array element on index 23, each fairy check/restart point is tagged with an unique hashcode: 0x4A000005, 0x4A000006, ... */
 
