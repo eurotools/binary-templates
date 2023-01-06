@@ -2,13 +2,12 @@
 //--- 010 Editor v11.0.1 Binary Template
 //
 //      File: SpyroSoundBanks.bt
-//   Authors: jmarti856
+//   Authors: jmarti856, Swyter
 //   Version: 1.0
 //   Purpose: Parse SFX soundbanks files.
 //  Category: Audio
-// File Mask: *.sfx
-//  ID Bytes: 
-//   History: 
+// File Mask: *_sb_*.sfx
+//  ID Bytes: 4D 55 53 58
 //------------------------------------------------
  
 //*===============================================================================================
@@ -16,14 +15,12 @@
 //*===============================================================================================
 typedef char ID[4];
 typedef char Padding[2];
-local int sfxIsBigEndian;
 
 //*===============================================================================================
 //* DEFINE STRUCTS USED IN THE SFX FILE
 //*===============================================================================================
 //The first parameters of the header ara always little endian
-LittleEndian(); 
-sfxIsBigEndian = 0;
+LittleEndian(); local int sfxIsBigEndian = 0;
 
 typedef struct 
 {
@@ -35,15 +32,11 @@ typedef struct
 	uint   TimeSpan;
 	uint   unk;
 	uint   structPadding;
-	/*For GC*/
-	if (ReadUInt() == 0x0800)
+
+	if (ReadUInt() != 0x0800) /* For GC */
 	{
-		LittleEndian();
-	}
-	else
-	{
-		sfxIsBigEndian = 1;
-		BigEndian();		
+        Printf("[i] This is a GameCube SFX. Changing endianness to big-endian.");
+        BigEndian(); sfxIsBigEndian = 1;
 	}
 } CommonHeader;
 

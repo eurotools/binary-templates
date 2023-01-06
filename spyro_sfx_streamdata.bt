@@ -15,14 +15,13 @@
 //*===============================================================================================
 typedef char ID[4];
 typedef char Padding[2];
-local int sfxIsBigEndian;
+
 
 //*===============================================================================================
 //* DEFINE STRUCTS USED IN THE SFX FILE
 //*===============================================================================================
 //The first parameters of the header ara always little endian
-LittleEndian(); 
-sfxIsBigEndian = 0;
+LittleEndian(); local int sfxIsBigEndian = 0;
 
 typedef struct 
 {
@@ -34,14 +33,12 @@ typedef struct
 	uint   TimeStamp;
 	uint   unk;
 	uint   structPadding;
-	/*For GC*/
-	if (ReadUInt() != 0x0800)
+	
+	if (ReadUInt() != 0x0800) /* For GC */
 	{
         Printf("[i] This is a GameCube SFX. Changing endianness to big-endian.");
         BigEndian(); sfxIsBigEndian = 1;
 	}
-	else
-		LittleEndian();
 } CommonHeader;
 
 typedef struct

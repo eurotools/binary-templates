@@ -26,6 +26,7 @@ typedef struct
     uint   Hashcode <format=hex>;
     uint   FileVersion;
     uint   FileSize <format=hex>;
+
 	ID     Platform;
 	uint   TimeStamp;
 	uint   unk;
@@ -35,7 +36,7 @@ typedef struct
 typedef struct
 {
 	uint	FirstHashCode<format=hex>;
-	uint 	 LasthashCode<format=hex>;
+	uint 	 LastHashCode<format=hex>;
 } HashCodesLimits; /* swy: As the hashcodes listed here must seemingly must be contiguous we can simply do (LastHashCode - FirstHashCode) to get the total amount of entries in the list. i.e. 0x1AF006CD - 0x1AF00000 = 1741 */
 
 typedef struct
@@ -60,6 +61,13 @@ if(header.Magic != "MUSX")
 //Read the minimum and maximum hashcode
 SetBackColor(cGreen);
 HashCodesLimits data;
+
+/* swy: for some reason the HashCodesLimits are also little-endian, probably not read by the game (?) */
+if (header.Platform[0] == 'G' && header.Platform[1] == 'C') /* For GC */
+{
+    Printf("[i] This is a GameCube SFX. Changing endianness to big-endian.");
+    BigEndian();
+}
 
 SetBackColor(cBlue);
 while (!FEof())

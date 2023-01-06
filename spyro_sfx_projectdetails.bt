@@ -83,6 +83,12 @@ if(header.Magic != "MUSX")
     return -1;
 }
 
+if (header.Platform[0] == 'G' && header.Platform[1] == 'C') /* For GC */
+{
+    Printf("[i] This is a GameCube SFX. Changing endianness to big-endian.");
+    BigEndian();
+}
+
 // Read Soundbanks Header
 SetBackColor(cGreen);
 SpecificFileHeader specHeader;
