@@ -111,11 +111,7 @@ typedef struct
 	//Return to prev position (FileStart1)
 	FSeek(curPos);
 
-
 } soundDetails;
-
-
-
 
 
 //*===============================================================================================
@@ -147,17 +143,16 @@ local uint totalSounds = SBHeader.FileStart1Length / 4;
 local uint index = 0;
 local uint markersCount = 0;
 local long currentPos = 0;
+
+SetBackColor(cBlue);
+SBLookUpTable offsets[totalSounds];
+
+
 for (index = 0; index < totalSounds; index++)
 {
-	SetBackColor(cBlue);
-	SBLookUpTable offsets;
-	currentPos = FTell();
-	
 	//Sound details (Go to FileStart2)
-	FSeek(offsets.posOffset + SBHeader.FileStart2);
-	SetBackColor(cLtRed);
-	soundDetails details;
+	FSeek(offsets[index].posOffset + SBHeader.FileStart2);
 
-	//Return to prev position (FileStart1)
-	FSeek(currentPos);
+    SetBackColor(cLtRed);
+	soundDetails details;
 }
