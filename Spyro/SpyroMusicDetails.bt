@@ -2,7 +2,7 @@
 //--- 010 Editor v11.0.1 Binary Template
 //
 //      File: SpyroProjectDetails.bt
-//   Authors: jmarti856
+//   Authors: jmarti856, Swyter
 //   Version: 1.0
 //   Purpose: Parse Temporal SFX files.
 //  Category: Audio
@@ -37,16 +37,15 @@ typedef struct
 {
 	uint	MinHashCode<format=hex>;
 	uint 	MaxhashCode<format=hex>;
-	uint	Padding[2];
-} HashCodesLimits;
+} HashCodesLimits <read=Str("[/] first: %#10x, last: %#10x", MinHashCode, MaxhashCode)>;
 
 typedef struct
 {
+	uint 	MusicHashCode <format=hex>;
+	float 	DurationInSeconds;
 	uint 	MusicLooping;
 	uint 	Uservalue;
-	uint 	MusicHashCode<format=hex>;
-	float 	DurationInSeconds;
-} MusicData;
+} MusicData <read=Str("%#10x | %fs looping: %u user: %u", MusicHashCode, DurationInSeconds, MusicLooping, Uservalue)>;
 
 //*===============================================================================================
 //* READ FILE
@@ -70,7 +69,8 @@ local int TotalItems = (header.FileSize - 48)/16;
 local int index = 0;
 
 SetBackColor(cBlue);
-for(index = 0; index < TotalItems; index++)
+
+while (!FEof()) /* swy: read entries until we reach the end of the file; we could also potentially check for the last hashcode (i.e. MaxhashCode) */
 {
 	MusicData musData;
 }
