@@ -112,14 +112,17 @@ for (index = 0; index < totalSounds; index++)
 	    uint      MarkerOffset <format=hex>;
     
 	    uint BaseVolume;
+
+        enum<uint> MTyp { Start = 10, End = 9, Goto = 7, Loop = 6, Pause = 5, Jump = 0 };
     
         typedef struct
         {
-	        uint Name;
+	         int Name;
 	        uint Position;
-	        uint MarkerType;
+	        MTyp MarkerType;
 	        uint LoopStart;
 	        uint LoopMarkerCount;
+            /* -- */
 	        uint MarkerPosition;
         } StartMarker;
     
@@ -130,7 +133,7 @@ for (index = 0; index < totalSounds; index++)
         {
 	         int Name;
 	        uint Position;
-	        uint MarkerType;
+	        MTyp MarkerType;
 	        uint LoopStart;
 	        uint LoopMarkerCount;
         } Marker;
@@ -139,7 +142,7 @@ for (index = 0; index < totalSounds; index++)
         Marker Markers[MarkerCount];
     
         /* swy: the audio data is far away; get there via offset, store as part of our SFX struct and go back */
-	    FSeek(SBHeader.FileStart2 + AudioOffset); SetBackColor(cDkRed); byte AudioData[AudioSize];
+	    FSeek(SBHeader.FileStart2 + AudioOffset); SetBackColor(cDkRed); ubyte AudioData[AudioSize];
 
         local uint cur_index = index; /* swy: save a local copy of the current state of the for loop for future reference and creating the printf-style string */
     } StreamedSound <read=Str("[%i] startmarkers: %u, markers: %u, bufsize: %#x", cur_index*-1-1, StartMarkerCount, MarkerCount, AudioSize), optimize=false>;
