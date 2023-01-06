@@ -6,9 +6,8 @@
 //   Version: 1.0
 //   Purpose: Parse Temporary SFX files.
 //  Category: Audio
-// File Mask: *.sfx
-//  ID Bytes: 
-//   History: 
+// File Mask: *__sounddetails.sfx
+//  ID Bytes: 4D 55 53 58
 //------------------------------------------------
 //*===============================================================================================
 //* Typedefs for the sfx file
@@ -24,11 +23,11 @@ LittleEndian();
 typedef struct 
 {
     ID     Magic;
-    uint   Hashcode<format=hex>;
-    uint   FileVersion<format=hex>;
-    uint   FileSize;
+    uint   Hashcode <format=hex>;
+    uint   FileVersion;
+    uint   FileSize <format=hex>;
 	ID     Platform;
-	uint   TimeSpan;
+	uint   TimeStamp;
 	uint   unk;
 	uint   structPadding;
 } CommonHeader;
@@ -42,7 +41,7 @@ typedef struct
 typedef struct
 {
 	ushort a, b; float thing; ubyte p,q,r,s;
-} MusicData <read=Str(" %u %u %f - %u/%u/%u/%u", a, b, thing, p, q, r, s)>;
+} SoundData <read=Str(" %u %u %f - %u/%u/%u/%u", a, b, thing, p, q, r, s)>;
 
 //*===============================================================================================
 //* READ FILE
@@ -65,5 +64,5 @@ HashCodesLimits data;
 SetBackColor(cBlue);
 while (!FEof())
 {
-	MusicData musData;
+	SoundData sndData;
 }

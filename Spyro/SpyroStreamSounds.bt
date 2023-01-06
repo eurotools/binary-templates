@@ -28,32 +28,30 @@ typedef struct
 {
     ID     Magic;
     uint   Hashcode <format=hex>;
-    uint   ConstantOffset <format=hex>;
-    uint   FileSize;
+    uint   FileVersion;
+    uint   FileSize <format=hex>;
 	ID     Platform;
-	uint   TimeSpan;
+	uint   TimeStamp;
 	uint   unk;
 	uint   structPadding;
 	/*For GC*/
-	if (ReadUInt() == 0x0800)
+	if (ReadUInt() != 0x0800)
 	{
-		LittleEndian();
+        Printf("[i] This is a GameCube SFX. Changing endianness to big-endian.");
+        BigEndian(); 		sfxIsBigEndian = 1;
 	}
 	else
-	{
-		sfxIsBigEndian = 1;
-		BigEndian();		
-	}
+		LittleEndian();
 } CommonHeader;
 
 typedef struct
 {
 	uint	FileStart1 <format=hex>;
-	uint 	FileStart1Length;
+	uint 	FileStart1Length <format=hex>;
 	uint 	FileStart2 <format=hex>;
-	uint	FileStart2Length;
+	uint	FileStart2Length <format=hex>;
 	uint	FileStart3 <format=hex>;
-	uint	FileStart3Length;
+	uint	FileStart3Length <format=hex>;
 } StreamBanksHeader;
 
 typedef struct

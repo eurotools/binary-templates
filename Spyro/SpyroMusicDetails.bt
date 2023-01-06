@@ -6,9 +6,8 @@
 //   Version: 1.0
 //   Purpose: Parse Temporal SFX files.
 //  Category: Audio
-// File Mask: *.sfx
-//  ID Bytes: 
-//   History: 
+// File Mask: __musicdetails.sfx
+//  ID Bytes: 4D 55 53 58
 //------------------------------------------------
 //*===============================================================================================
 //* Typedefs for the sfx file
@@ -24,11 +23,11 @@ LittleEndian();
 typedef struct 
 {
     ID     Magic;
-    uint   Hashcode<format=hex>;
-    uint   FileVersion<format=hex>;
-    uint   FileSize;
+    uint   Hashcode <format=hex>;
+    uint   FileVersion;
+    uint   FileSize <format=hex>;
 	ID     Platform;
-	uint   TimeSpan;
+	uint   TimeStamp;
 	uint   unk;
 	uint   structPadding;
 } CommonHeader;

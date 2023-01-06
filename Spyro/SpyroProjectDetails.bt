@@ -2,13 +2,12 @@
 //--- 010 Editor v11.0.1 Binary Template
 //
 //      File: SpyroProjectDetails.bt
-//   Authors: jmarti856
+//   Authors: jmarti856, Swyter
 //   Version: 1.0
 //   Purpose: Parse Temporal SFX files.
 //  Category: Audio
-// File Mask: *.sfx
-//  ID Bytes: 
-//   History: 
+// File Mask: __projectdetails.sfx
+//  ID Bytes: 4D 55 53 58
 //------------------------------------------------
 //*===============================================================================================
 //* Typedefs for the sfx file
@@ -25,11 +24,11 @@ LittleEndian();
 typedef struct 
 {
     ID     Magic;
-    uint   Hashcode<format=hex>;
-    uint   FileVersion<format=hex>;
-    uint   FileSize;
+    uint   Hashcode <format=hex>;
+    uint   FileVersion;
+    uint   FileSize <format=hex>;
 	ID     Platform;
-	uint   TimeSpan;
+	uint   TimeStamp;
 	uint   unk;
 	uint   structPadding;
 } CommonHeader;
