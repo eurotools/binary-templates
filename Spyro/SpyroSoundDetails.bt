@@ -1,10 +1,10 @@
 //------------------------------------------------
 //--- 010 Editor v11.0.1 Binary Template
 //
-//      File: SpyroProjectDetails.bt
-//   Authors: jmarti856
+//      File: SpyroSoundDetails.bt
+//   Authors: jmarti856, Swyter
 //   Version: 1.0
-//   Purpose: Parse Temporal SFX files.
+//   Purpose: Parse Temporary SFX files.
 //  Category: Audio
 // File Mask: *.sfx
 //  ID Bytes: 
@@ -35,17 +35,14 @@ typedef struct
 
 typedef struct
 {
-	uint	MinHashCode<format=hex>;
-	uint 	MaxhashCode<format=hex>;
-	uint	Padding[1];
-} HashCodesLimits;
+	uint	FirstHashCode<format=hex>;
+	uint 	 LasthashCode<format=hex>;
+} HashCodesLimits; /* swy: As the hashcodes listed here must seemingly must be contiguous we can simply do (LastHashCode - FirstHashCode) to get the total amount of entries in the list. i.e. 0x1AF006CD - 0x1AF00000 = 1741 */
 
 typedef struct
 {
-	uint 	MusicLooping;
-	uint 	Uservalue;
-	uint 	MusicHashCode<format=hex>;
-} MusicData;
+	ushort a, b; float thing; ubyte p,q,r,s;
+} MusicData <read=Str(" %u %u %f - %u/%u/%u/%u", a, b, thing, p, q, r, s)>;
 
 //*===============================================================================================
 //* READ FILE
@@ -65,11 +62,8 @@ if(header.Magic != "MUSX")
 SetBackColor(cGreen);
 HashCodesLimits data;
 
-local int TotalItems = (header.FileSize - 48)/12;
-local int index = 0;
-
 SetBackColor(cBlue);
-for(index = 0; index < TotalItems; index++)
+while (!FEof())
 {
 	MusicData musData;
 }
