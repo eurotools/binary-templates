@@ -38,7 +38,7 @@ typedef struct
 	if (ReadUInt() != 0x0800)
 	{
         Printf("[i] This is a GameCube SFX. Changing endianness to big-endian.");
-        BigEndian(); 		sfxIsBigEndian = 1;
+        BigEndian(); sfxIsBigEndian = 1;
 	}
 	else
 		LittleEndian();
@@ -46,63 +46,15 @@ typedef struct
 
 typedef struct
 {
-	uint	FileStart1 <format=hex>;
+	uint	FileStart1       <format=hex>;
 	uint 	FileStart1Length <format=hex>;
-	uint 	FileStart2 <format=hex>;
+
+	uint 	FileStart2       <format=hex>;
 	uint	FileStart2Length <format=hex>;
-	uint	FileStart3 <format=hex>;
+
+	uint	FileStart3       <format=hex>;
 	uint	FileStart3Length <format=hex>;
 } StreamBanksHeader;
-
-typedef struct
-{
-	uint 	posOffset <format=hex>;
-} SBLookUpTable;
-
-typedef struct
-{
-	uint MarkerSize  <format=hex>;
-	uint AudioOffset <format=hex>;
-	uint AudioSize   <format=hex>;
-
-	uint StartMarkerCount;
-	uint      MarkerCount;
-
-	uint StartMarkerOffset <format=hex>;
-	uint      MarkerOffset <format=hex>;
-
-	uint BaseVolume;
-
-    typedef struct
-    {
-	    uint Name;
-	    uint Position;
-	    uint MarkerType;
-	    uint LoopStart;
-	    uint LoopMarkerCount;
-	    uint MarkerPosition;
-    } StartMarker;
-
-    SetBackColor(cAqua);
-    StartMarker StartMarkers[StartMarkerCount];
-
-    typedef struct
-    {
-	     int Name;
-	    uint Position;
-	    uint MarkerType;
-	    uint LoopStart;
-	    uint LoopMarkerCount;
-    } Marker;
-
-    SetBackColor(cLtGreen);
-    Marker Markers[MarkerCount];
-
-    /* swy: the audio data is far away; get there via offset, store as part of our SFX struct and go back */
-	FSeek(SBHeader.FileStart2 + AudioOffset); SetBackColor(cDkRed); byte AudioData[AudioSize];
-
-} StreamedSound <read=Str("startmarkers: %u, markers: %u, bufsize: %#x", StartMarkerCount, MarkerCount, AudioSize)>;
-
 
 //*===============================================================================================
 //* READ FILE
@@ -129,6 +81,12 @@ if (FSeek(SBHeader.FileStart1) < 0)
 	return -1;
 }
 
+
+typedef struct
+{
+	uint posOffset <format=hex>;
+} SBLookUpTable;
+
 local uint totalSounds = SBHeader.FileStart1Length / sizeof(SBLookUpTable);
 local uint index = 0;
 
@@ -137,8 +95,54 @@ SBLookUpTable offsets[totalSounds];
 
 for (index = 0; index < totalSounds; index++)
 {
-	//Sound details (Go to FileStart2)
+	/* swy: use the lookup table for the current index to compute
+            an absolute offset to the right place */
 	FSeek(SBHeader.FileStart2 + offsets[index].posOffset);
+
+    typedef struct
+    {
+	    uint MarkerSize  <format=hex>;
+	    uint AudioOffset <format=hex>;
+	    uint AudioSize   <format=hex>;
+    
+	    uint StartMarkerCount;
+	    uint      MarkerCount;
+    
+	    uint StartMarkerOffset <format=hex>;
+	    uint      MarkerOffset <format=hex>;
+    
+	    uint BaseVolume;
+    
+        typedef struct
+        {
+	        uint Name;
+	        uint Position;
+	        uint MarkerType;
+	        uint LoopStart;
+	        uint LoopMarkerCount;
+	        uint MarkerPosition;
+        } StartMarker;
+    
+        SetBackColor(cAqua);
+        StartMarker StartMarkers[StartMarkerCount];
+    
+        typedef struct
+        {
+	         int Name;
+	        uint Position;
+	        uint MarkerType;
+	        uint LoopStart;
+	        uint LoopMarkerCount;
+        } Marker;
+    
+        SetBackColor(cLtGreen);
+        Marker Markers[MarkerCount];
+    
+        /* swy: the audio data is far away; get there via offset, store as part of our SFX struct and go back */
+	    FSeek(SBHeader.FileStart2 + AudioOffset); SetBackColor(cDkRed); byte AudioData[AudioSize];
+
+        local uint cur_index = index; /* swy: save a local copy of the current state of the for loop for future reference and creating the printf-style string */
+    } StreamedSound <read=Str("[%i] startmarkers: %u, markers: %u, bufsize: %#x", cur_index*-1-1, StartMarkerCount, MarkerCount, AudioSize), optimize=false>;
 
     SetBackColor(cLtRed);
 	StreamedSound stream;
