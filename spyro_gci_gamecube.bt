@@ -84,7 +84,7 @@ typedef struct
 
     enum map_list
     {
-        /* 0x01       -         .edb                                    */ MapLoading              =  0,
+        /* 0x010000A9 -  loading.edb                                    */ MapLoading              =  0,
         /* 0x01       -         .edb                                    */ LoadingLoop2D           =  1,
         /* 0x010000D3 -  mr1_blk.edb (Blink minigame 1)                 */ Completely_Swamped      =  2,
         /* 0x01000093 -  mr1_sgt.edb (Sgt Byrd minigame 1)              */ Island_Speedway         =  3,
@@ -102,18 +102,18 @@ typedef struct
         /* 0x010000A3 -  mr4_sgt.edb (Sgt Byrd minigame 4)              */ Lava_Palaver            = 15,
         /* 0x010000B4 -  mr4_spx.edb (Sparx minigame 4)                 */ Sparx_Will_Fly          = 16,
         /* 0x010000BF -  mr4_spy.edb (Spyro minigame 4)                 */ Storming_the_Beach      = 17,
-        /* 0x01       -         .edb                                    */ Credits                 = 18,
+        /* 0x0100015c -  credits.edb (Credits)                          */ Credits                 = 18,
         /* 0x0100005A -  realm2b.edb (Sunken Ruins)                     */ Sunken_Ruins            = 19,
         /* 0x0100005B -  realm2c.edb (Cloudy Domain)                    */ Cloudy_Domain           = 20,
-        /* 0x01       -         .edb                                    */ Cloudy_Domain_b         = 21,
+        /* 0x0100005B -  realm2c.edb (Cloudy Domain Ball Gadget)        */ Cloudy_Domain_b         = 21,
         /* 0x0100003A -  realm1c.edb (Dragonfly Falls)                  */ Dragonfly_Falls         = 22,
         /* 0x01000039 -  realm1b.edb (Crocovile Swamp)                  */ Crocovile_Swamp         = 23,
         /* 0x01000037 -  realm1a.edb (Dragon Village)                   */ Dragon_Village          = 24,
         /* 0x0100006D - r1linkab.edb (Link map: DV to CS)               */ MapR1LinkAB             = 25,
-        /* 0x01000082 - r1linkac.edb (Link map: DV to DF (ball gadget)) */ MapR1LinkAC             = 26,
+        /* 0x01000082 - r1linkac.edb (Link map: DV to DF (Ball Gadget)) */ MapR1LinkAC             = 26,
         /* 0x01000008 - hogwarts.edb                                    */ MapExample              = 27, /* swy: Hogwarts castle */
         /* 0x01000058 -  test_dp.edb                                    */ testdp                  = 28,
-        /* 0x01       -         .edb                                    */ MapMorphEnv             = 29,
+        /* 0x01000043 -  test_sc.edb                                    */ MapMorphEnv             = 29,
         /* 0x010000A1 -  realm4d.edb (Dark Mine)                        */ Dark_Mine               = 30,
         /* 0x01000038 -  realm3a.edb (Frostbite Village)                */ Frostbite_Village       = 31,
         /* 0x01000087 -  realm1z.edb (Gnasty’s Cave)                    */ Gnastys_Cave            = 32,
@@ -137,17 +137,17 @@ typedef struct
         /* 0x01000007 -  test_nb.edb                                    */ Test_NB                 = 50,
         /* 0x0100015D - test_nb2.edb                                    */ Test_NB2                = 51,
         /* 0x0100000A -  test_sj.edb                                    */ Test_SJ                 = 52,
-        /* 0x01       -         .edb                                    */ Platform_Area           = 53, /* Inaccessible - probably removed */
-        /* 0x01       -         .edb                                    */ TestBeach               = 54,
-        /* 0x01       -         .edb                                    */ TestBall                = 55, /* Inaccessible - probably removed */
+        /* 0x01000020 - test_wts.edb                                    */ Platform_Area           = 53, /* Inaccessible - probably removed */
+        /* 0x0100002b - test_bch.edb                                    */ TestBeach               = 54,
+        /* 0x0100002E -          N/A                                    */ TestBall                = 55, /* Inaccessible - probably removed */
         /* 0x01000029 -   titles.edb (Title screen)                     */ Titles                  = 56,
         /* 0x01000154 - r4linkbc.edb (Link map: MM to MFT (elevator))   */ MapR4LinkBC             = 57,
         /* 0x01000156 - r4linkcd.edb (Link map: MFB to DM)              */ MapR4LinkCD             = 58,
         /* 0x01000155 - r4linkde.edb (Link map: DM to RL)               */ MapR4LinkDE             = 59,
         /* 0x0100005E -  realm4b.edb (Molten Mount)                     */ Molten_Mount            = 60,
-        /* 0x0100005F -  realm4c.edb (Magma Falls)                      */ Magma_Falls_Top         = 61,
-        /* 0x01       -         .edb                                    */ Magma_Falls_Ball_Gadget = 62,
-        /* 0x01       -         .edb                                    */ Magma_Falls_Bottom      = 63,
+        /* 0x0100005F -  realm4c.edb (Magma Falls Top)                  */ Magma_Falls_Top         = 61,
+        /* 0x0100005F -  realm4c.edb (Magma Falls Ball Gadget)          */ Magma_Falls_Ball_Gadget = 62,
+        /* 0x0100005F -  realm4c.edb (Magma Falls Bottom)               */ Magma_Falls_Bottom      = 63,
         /* 0x010000EC -  realm2z.edb (Watery Tomb)                      */ Watery_Tomb             = 64
     } cur_map;
 
