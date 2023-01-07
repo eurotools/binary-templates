@@ -139,7 +139,7 @@ typedef struct
         /* 0x0100000A -  test_sj.edb                                    */ Test_SJ                 = 52,
         /* 0x01000020 - test_wts.edb                                    */ Platform_Area           = 53, /* Inaccessible - probably removed */
         /* 0x0100002b - test_bch.edb                                    */ TestBeach               = 54,
-        /* 0x0100002E -          N/A                                    */ TestBall                = 55, /* Inaccessible - probably removed */
+        /* 0x0100002E - testball.edb                                    */ TestBall                = 55, /* Inaccessible - probably removed */
         /* 0x01000029 -   titles.edb (Title screen)                     */ Titles                  = 56,
         /* 0x01000154 - r4linkbc.edb (Link map: MM to MFT (elevator))   */ MapR4LinkBC             = 57,
         /* 0x01000156 - r4linkcd.edb (Link map: MFB to DM)              */ MapR4LinkCD             = 58,
