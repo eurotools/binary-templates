@@ -173,7 +173,7 @@ typedef struct
         breath_ice = 4,
         breath_electric = 8,
     } breath_selected;
-    uint health, gem_count, gem_counter;
+    uint health, gem_total_count, gem_counter;
 
     ubyte lock_pick_count,lock_pick_limit,a,b;
 
@@ -222,14 +222,15 @@ typedef struct
         bool abiflg_double_jump : 1;
     } ability_flags;
     
-    uint unkbb[8] <format=hex>;
+    uint unk_a <format=hex>, zero, zero, zero, zero, unk_c <format=hex>, unk_d <format=hex>, zero;
     ushort thing, thong, thung, thang, zero_pad_maybe;
     ubyte light_gems, dark_gems, eggs, more;
     ushort alignment_b;
     uint zero;
-    float x, y, z; float zeroes[2]; float aa, bb;
+    float x, y, z; float rot_a, rot_b, rot_c, bb;
     uint trigger_state_bitflags[(0x43b2 / 4) - 8];
 
+    local uint map_count = 0;
     typedef struct
     {
         int start_point_hashcode <format=hex>;
@@ -240,7 +241,8 @@ typedef struct
             int lvl_darkgem_tally, lvl_lightgem_tally, lvl_egg_conceptart_tally, lvl_egg_charviewer_tally, lvl_egg_ember_tally, lvl_egg_flame_tally, lvl_egg_blink_tally, lvl_egg_turret_tally, lvl_egg_sparx_tally, lvl_egg_blink_tally;
         } level_collectible_tallies;
         int one_or_zero_b, f <format=hex>, g;
-    } start_point <read=Str("[%x] - %s", start_point_hashcode, EnumToString(cur_map))>;
+        local enum map_list cur_map = map_count++;
+    } start_point <read=Str("[%x] - %s", start_point_hashcode, EnumToString(cur_map)), optimize=false>;
 
     start_point start_point_for_level[200]; /* swy: there's one start point set for level; e.g. if the current map is Dragon_Village (23), the game uses the array element on index 23, each fairy check/restart point is tagged with an unique hashcode: 0x4A000005, 0x4A000006, ... */
 
