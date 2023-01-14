@@ -13,22 +13,25 @@ BigEndian();
 
 struct
 {
-    char game_id[6];
-    ushort id_b <format=hex>;
+    char game_id[4]; char publisher_id[2]; ushort id_b <format=hex>;
     char game_tag[4 + 28];
     uint variable_size_thing <format=hex>;
-    uint checksummed_data_begin_offset <format=hex>;
-    uint stuff[4] <format=hex>;
-    uint checksum <format=hex>; /* swy: from 0x1c0 to data end (0x28040) */
+    uint banner_assets_offset <format=hex>;
+    ushort icon_fmt, icn_fmt_b, icon_anim_frames, unk_bc, storage_blocks, unk_cb;
+    uint text_labels_offset <format=hex>;
 
-
-    FSeek(checksummed_data_begin_offset);
+    FSeek(startof(text_labels_offset) + sizeof(text_labels_offset) + text_labels_offset);
     char game_title_str[32];
     char game_descr_str[32];
 
+    FSeek(startof(text_labels_offset) + sizeof(text_labels_offset) + banner_assets_offset);
     byte img_icon[0x2000];
 } gci_head;
 
+Assert(gci_head.game_id[1] == '5' && gci_head.game_id[2] == 'S', "This doesn't look like a Spyro: A Hero's Tail GameCube save. Stopping.");
+
+FSeek(  0x40); uint checksum <format=hex>, weird_padding[0x17c / 4] <hidden=true>; /* swy: seems to be unique to Eurocom; CRC32 from 0x1c0 to data end (0x28040) */
+FSeek(0x2200);
 struct
 {
     ubyte slot_a, slot_b, slot_c; ubyte more[5]; char pad[0x1e38];
