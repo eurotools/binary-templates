@@ -18,8 +18,8 @@ struct
     char game_tag[4 + 28];
     uint variable_size_thing_timestamp_maybe <format=hex>;
     uint graphic_assets_offset <format=hex>;
-    ushort icon_color_fmt; /* swy: seems like each nibble controls the format of the various frames */
-    ushort icon_anim_data; /* swy: top bit of the second nibble controls animation speed, rest controls the amount of frames somehow */
+    ushort icon_frame_color_fmt; /* swy: seems like each nibble controls the format of two frames, so there's probably a maximum of 8 frames */
+    ushort icon_anim_data;       /* swy: top bit of the second nibble controls animation speed, rest controls the amount of frames somehow */
     ushort icon_unk, unk_bc;
     ushort storage_blocks, unk_ff;
     uint text_labels_offset <format=hex>;
