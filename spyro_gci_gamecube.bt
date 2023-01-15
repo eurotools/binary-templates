@@ -18,7 +18,7 @@ struct
     char game_tag[4 + 28];
     uint variable_size_thing_timestamp_maybe <format=hex>;
     uint graphic_assets_offset <format=hex>;
-    ushort icn_anim_fmt, icon_fmt_b, icon_unk, unk_bc;
+    ushort icn_color_fmt, icon_anim_data, icon_unk, unk_bc;
     ushort storage_blocks, unk_ff;
     uint text_labels_offset <format=hex>;
 } gci_head;
@@ -41,11 +41,14 @@ local uint   icon_byte_size = (32 * 32) * 1.5; /* swy: usually 0x600 bytes per i
 /* swy: format 1 = (width * height * frames) + 0x200 of palette */
 /* swy: format 6 = (width * height * frames) * 2                */
 
-byte gci_img_banner[banner_byte_size]; /* swy: banner goes first, if any. then the icon, many eurocom games take 0x2000 for both, so I thought it was static */
-//byte gci_img_banner_pal[0x200];
+/* swy: 2 restart animation again, 6 ping-poing */
+/* swy: 1 restart animation again, 5 ping-poing - probably */
 
-byte gci_img_icon  [(32 * 32) * 2]; /* swy: 0x2200, 8 images */
-//byte gci_img_icon_pal[0x200];
+byte gci_img_banner[banner_byte_size]; /* swy: banner goes first, if any. then the icon, many eurocom games take 0x2000 for both, so I thought it was static */
+byte gci_img_banner_pal[0x200];
+
+byte gci_img_icon  [(32 * 32) * 5]; /* swy: 0x2200, 8 images */
+byte gci_img_icon_pal[0x200];
 
 /* -- */
 
