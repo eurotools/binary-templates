@@ -13,8 +13,10 @@ BigEndian();
 
 struct
 {
+    enum<ubyte> gci_tex_fmt { fmt_none = 0, fmt_palette = 1, fmt_truecolor = 2, fmt_palette_pingpong = 5, fmt_truecolor_pingpong = 6 };
+
     char game_id[4]; char publisher_id[2];
-    ubyte unk_ff <format=hex>, banner_format <format=hex>; /* swy: FF 00 = no banner */
+    ubyte unk_ff <format=hex>; gci_tex_fmt banner_format; /* swy: FF 00 = no banner */
     char game_tag[4 + 28];
     uint variable_size_thing_timestamp_maybe <format=hex>;
     uint graphic_assets_offset <format=hex>;
