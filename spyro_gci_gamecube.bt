@@ -18,7 +18,9 @@ struct
     char game_tag[4 + 28];
     uint variable_size_thing_timestamp_maybe <format=hex>;
     uint graphic_assets_offset <format=hex>;
-    ushort icn_color_fmt, icon_anim_data, icon_unk, unk_bc;
+    ushort icon_color_fmt; /* swy: seems like each nibble controls the format of the various frames */
+    ushort icon_anim_data; /* swy: top bit of the second nibble controls animation speed, rest controls the amount of frames somehow */
+    ushort icon_unk, unk_bc;
     ushort storage_blocks, unk_ff;
     uint text_labels_offset <format=hex>;
 } gci_head;
@@ -41,8 +43,8 @@ local uint   icon_byte_size = (32 * 32) * 1.5; /* swy: usually 0x600 bytes per i
 /* swy: format 1 = (width * height * frames) + 0x200 of palette */
 /* swy: format 6 = (width * height * frames) * 2                */
 
-/* swy: 2 restart animation again, 6 ping-poing */
-/* swy: 1 restart animation again, 5 ping-poing - probably */
+/* swy: 2 restart animation again, 6 ping-pong */
+/* swy: 1 restart animation again, 5 ping-pong - probably */
 
 byte gci_img_banner[banner_byte_size]; /* swy: banner goes first, if any. then the icon, many eurocom games take 0x2000 for both, so I thought it was static */
 byte gci_img_banner_pal[0x200];
