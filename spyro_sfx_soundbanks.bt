@@ -40,79 +40,6 @@ typedef struct
 } CommonHeader <read=Str("[%s] %#010x | %s", Magic, Hashcode, Platform)>;
 
 
-typedef struct
-{
-	short 	DuckerLength;
-	short 	MinDelay;
-	short 	MaxDelay;
-	ubyte	ReverbSend;
-	ubyte 	TrackingType;
-	ubyte	MaxVoices;
-	ubyte	Priority;
-	ubyte	Ducker;
-	ubyte 	MasterVolume;
-
-	struct Group
-    { 
-        short GroupHashCode : 4;
-        short GroupMaxChannels : 12; 
-    } GroupSettings;
-
-	short   Flags;
-	short	SamplesCount;
-
-    typedef	struct
-    {
-	    short FileRef;
-	    short PitchOffset;
-	    short RandomPitchOffset;
-	    ubyte BaseVolume;
-	    ubyte RandomVolumeOffset;
-	    ubyte Pan;
-	    ubyte RandomPan;
-	    Padding SectPadding;
-    } Samples;
-
-    SetBackColor(cAqua);
-	Samples smpParams[SamplesCount];
-
-} Sounds;
-
-
-typedef struct
-{
-	uint 	Flags;
-	uint	Address;
-	uint 	AudioDataSize<format=hex>;
-	uint 	Frequency;
-	uint 	RealSize;
-	uint	PSI;
-	uint	LoopOffset;
-	uint	Duration;
-} SampleInfo;
-
-typedef struct
-{
-	uint NumSamples;
-	uint NibblesADPCM;
-	uint SampleRate;
-	ushort LoopFlag;
-	ushort Format;
-	uint StartOffset;
-	uint EndOffset;
-	uint unk;
-	ushort DecodeCoefficients[16]<format=hex>;
-	ushort Gain;
-	ushort Predictor;
-	ushort SampleHistory;
-	ushort SampleHistory2;
-	ushort PredictorLoop;
-	ushort SampleHistoryLoop;
-	ushort SampleHistoryLoop2;
-	ushort PaddingSamples[10];
-	ushort padding;
-} SpecialSample;
-
 //*===============================================================================================
 //* READ FILE
 //*===============================================================================================
@@ -163,12 +90,51 @@ struct SoundsArray
 local int index = 0;
 local long currentPos = 0;
 
+typedef struct
+{
+	short 	DuckerLength;
+	short 	MinDelay;
+	short 	MaxDelay;
+	ubyte	ReverbSend;
+	ubyte 	TrackingType;
+	ubyte	MaxVoices;
+	ubyte	Priority;
+	ubyte	Ducker;
+	ubyte 	MasterVolume;
+
+	struct Group
+    { 
+        short GroupHashCode : 4;
+        short GroupMaxChannels : 12; 
+    } GroupSettings;
+
+	short   Flags;
+	short	SamplesCount;
+
+    typedef	struct
+    {
+	    short FileRef;
+	    short PitchOffset;
+	    short RandomPitchOffset;
+	    ubyte BaseVolume;
+	    ubyte RandomVolumeOffset;
+	    ubyte Pan;
+	    ubyte RandomPan;
+	    Padding SectPadding;
+    } Samples;
+
+    SetBackColor(cAqua);
+	Samples smpParams[SamplesCount];
+
+} Sounds;
+
 for (index = 0; index < totalSounds; index++)
 {
 	FSeek(StoredSound[index].Location + SBHeader.SFXStart);
     SetBackColor(cLtRed);
 	Sounds sfxParams;
 }
+
 
 //Read Sample Info Section
 if (FSeek( SBHeader.SampleInfoStart ) < 0)
@@ -179,6 +145,18 @@ if (FSeek( SBHeader.SampleInfoStart ) < 0)
 
 //Get the number of stored samples in this section
 uint totalSamples;
+
+typedef struct
+{
+	uint 	Flags;
+	uint	Address;
+	uint 	AudioDataSize<format=hex>;
+	uint 	Frequency;
+	uint 	RealSize;
+	uint	PSI;
+	uint	LoopOffset;
+	uint	Duration;
+} SampleInfo;
 
 //Read samples params
 index = 0;
@@ -195,6 +173,29 @@ for (index = 0; index < totalSamples; index++)
 }
 
 //Read Special Sample Info Section
+
+typedef struct
+{
+	uint NumSamples;
+	uint NibblesADPCM;
+	uint SampleRate;
+	ushort LoopFlag;
+	ushort Format;
+	uint StartOffset;
+	uint EndOffset;
+	uint unk;
+	ushort DecodeCoefficients[16]<format=hex>;
+	ushort Gain;
+	ushort Predictor;
+	ushort SampleHistory;
+	ushort SampleHistory2;
+	ushort PredictorLoop;
+	ushort SampleHistoryLoop;
+	ushort SampleHistoryLoop2;
+	ushort PaddingSamples[10];
+	ushort padding;
+} SpecialSample;
+
 if (SBHeader.SampleInfoStart != SBHeader.SpecialSampleInfoStart)
 {
 	if (FSeek(SBHeader.SpecialSampleInfoStart ) < 0)
