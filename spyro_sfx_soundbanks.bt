@@ -101,11 +101,9 @@ typedef struct
 	ubyte	Ducker;
 	ubyte 	MasterVolume;
 
-	struct Group
-    { 
-        short GroupHashCode : 4;
-        short GroupMaxChannels : 12; 
-    } GroupSettings;
+
+    short GroupHashCode : 4;
+    short GroupMaxChannels : 12; 
 
 	short   Flags;
 	short	SamplesCount;
@@ -126,7 +124,7 @@ typedef struct
 
     local uint idx = index;
 
-} Sounds <read=Str("hc: %#010x | sampl: %u, group: %u %u", StoredSound[idx].HashCode, SamplesCount, GroupSettings.GroupHashCode, GroupSettings.GroupMaxChannels)>;
+} Sounds <read=Str("hc: %#010x | sampl: %u, group: %u %u", StoredSound[idx].HashCode, SamplesCount, GroupHashCode, GroupMaxChannels)>;
 
 for (index = 0; index < totalSounds; index++)
 {
