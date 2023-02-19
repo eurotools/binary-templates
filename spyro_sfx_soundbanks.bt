@@ -106,7 +106,9 @@ typedef struct
 	short   Flags;
 	short	SamplesCount;
 
-    typedef	struct
+    SetBackColor(cAqua);
+
+    struct Samples
     {
 	    short FileRef;
 	    short PitchOffset;
@@ -116,10 +118,7 @@ typedef struct
 	    ubyte Pan;
 	    ubyte RandomPan;
 	    char SectPadding[2];
-    } Samples;
-
-    SetBackColor(cAqua);
-	Samples smpParams[SamplesCount];
+    } smpParams[SamplesCount];
 
 } Sounds;
 
@@ -143,6 +142,8 @@ uint totalSamples;
 
 typedef struct
 {
+    SetBackColor(cLtGreen);
+
 	uint 	Flags;
 	uint	Address;
 	uint 	AudioDataSize<format=hex>;
@@ -151,20 +152,23 @@ typedef struct
 	uint	PSI;
 	uint	LoopOffset;
 	uint	Duration;
-} SampleInfo;
+
+    /* -- */
+
+    currentPos = FTell(); FSeek(SBHeader.SampleDataStart + sampleInfoParams.Address);
+
+    SetBackColor(cDkRed);
+    ubyte audioData[AudioDataSize];
+
+    FSeek(currentPos);
+} SampleInfo <optimize=false>;
 
 //Read samples params
 index = 0;
 for (index = 0; index < totalSamples; index++)
 {
-	SetBackColor(cLtGreen);
-    SampleInfo sampleInfoParams;
-	currentPos = FTell();
 	
-	FSeek(sampleInfoParams.Address + SBHeader.SampleDataStart);
-	SetBackColor(cDkRed);
-	struct {byte audioData[sampleInfoParams.AudioDataSize]; } a;
-	FSeek(currentPos);
+    SampleInfo sampleInfoParams;
 }
 
 //Read Special Sample Info Section
