@@ -69,12 +69,12 @@ typedef struct
 	short 	DuckerLength;
 	short 	MinDelay;
 	short 	MaxDelay;
-	byte	ReverbSend;
-	byte 	TrackingType;
-	byte	MaxVoices;
-	byte	Priority;
-	byte	Ducker;
-	byte 	MasterVolume;
+	ubyte	ReverbSend;
+	ubyte 	TrackingType;
+	ubyte	MaxVoices;
+	ubyte	Priority;
+	ubyte	Ducker;
+	ubyte 	MasterVolume;
 	struct  Group GroupSettings;
 	short   Flags;
 	short	SamplesCount;
@@ -84,10 +84,10 @@ typedef struct
 	    short FileRef;
 	    short PitchOffset;
 	    short RandomPitchOffset;
-	    byte BaseVolume;
-	    byte RandomVolumeOffset;
-	    byte Pan;
-	    byte RandomPan;
+	    ubyte BaseVolume;
+	    ubyte RandomVolumeOffset;
+	    ubyte Pan;
+	    ubyte RandomPan;
 	    Padding SectPadding;
     } Samples;
 
