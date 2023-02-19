@@ -90,8 +90,8 @@ local long currentPos = 0;
 
 typedef struct
 {
-    SetBackColor(cLtRed);
-	short 	DuckerLength;
+    SetBackColor(cDkRed);
+	short 	DuckerLength; SetBackColor(cRed);
 	short 	MinDelay;
 	short 	MaxDelay;
 	ubyte	ReverbSend;
@@ -115,11 +115,10 @@ typedef struct
 	short   Flags;
 	short	SamplesCount;
 
-    SetBackColor(cAqua);
-
     typedef struct
     {
-	    short FileRef;
+        SetBackColor(cLtBlue);
+	    short FileRef; SetBackColor(cAqua);
 	    ubyte PitchOffset;
 	    ubyte RandomPitchOffset;
 	    ubyte BaseVolume;
