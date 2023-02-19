@@ -19,7 +19,7 @@ typedef char Padding[2];
 //*===============================================================================================
 //* DEFINE STRUCTS USED IN THE SFX FILE
 //*===============================================================================================
-//The first parameters of the header ara always little endian
+//The first parameters of the header are always little endian
 LittleEndian(); local int sfxIsBigEndian = 0;
 
 typedef struct 
@@ -152,8 +152,7 @@ if (FSeek( SBHeader.SFXStart ) < 0)
 }
 
 //Get the number of stored sounds in this section
-local int totalSounds = ReadUInt(FTell());
-FSkip(sizeof(UINT));
+uint totalSounds;
 
 //Read SFX Array & SFX Params
 local int index = 0;
