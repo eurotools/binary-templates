@@ -170,12 +170,9 @@ local long currentPos = 0;
 
 for (index = 0; index < totalSounds; index++)
 {
-	currentPos = FTell();
-	
 	FSeek(StoredSound[index].Location + SBHeader.SFXStart);
     SetBackColor(cLtRed);
 	Sounds sfxParams;
-	FSeek(currentPos);
 }
 
 //Read Sample Info Section
