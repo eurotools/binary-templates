@@ -113,13 +113,12 @@ typedef struct
     struct Samples
     {
 	    short FileRef;
-	    short PitchOffset;
-	    short RandomPitchOffset;
+	    ubyte PitchOffset;
+	    ubyte RandomPitchOffset;
 	    ubyte BaseVolume;
 	    ubyte RandomVolumeOffset;
 	    ubyte Pan;
 	    ubyte RandomPan;
-	    char SectPadding[2];
     } smpParams[SamplesCount];
 
     local uint idx = index;
