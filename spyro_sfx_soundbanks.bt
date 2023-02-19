@@ -78,19 +78,25 @@ typedef struct
 	struct  Group GroupSettings;
 	short   Flags;
 	short	SamplesCount;
+
+    typedef	struct
+    {
+	    short FileRef;
+	    short PitchOffset;
+	    short RandomPitchOffset;
+	    byte BaseVolume;
+	    byte RandomVolumeOffset;
+	    byte Pan;
+	    byte RandomPan;
+	    Padding SectPadding;
+    } Samples;
+
+    SetBackColor(cAqua);
+	Samples smpParams[SamplesCount];
+
 } Sounds;
 
-typedef	struct
-{
-	short FileRef;
-	short PitchOffset;
-	short RandomPitchOffset;
-	byte BaseVolume;
-	byte RandomVolumeOffset;
-	byte Pan;
-	byte RandomPan;
-	Padding SectPadding;
-} Samples;
+
 
 typedef struct
 {
@@ -169,11 +175,6 @@ for (index = 0; index < totalSounds; index++)
 	FSeek(StoredSound[index].Location + SBHeader.SFXStart);
     SetBackColor(cLtRed);
 	Sounds sfxParams;
-	for (indexSamples = 0; indexSamples < sfxParams.SamplesCount; indexSamples++)
-	{
-        SetBackColor(cAqua);
-		Samples smpParams;
-	}
 	FSeek(currentPos);
 }
 
