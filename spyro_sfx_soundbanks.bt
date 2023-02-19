@@ -32,7 +32,7 @@ typedef struct
         Printf("[i] This is a GameCube SFX. Changing endianness to big-endian.");
         BigEndian(); sfxIsBigEndian = 1;
 	}
-} CommonHeader <read=Str("[%s] %#010x | %s", Magic, Hashcode, Platform)>;
+} CommonHeader <read=Str("soundbank hc: %#010x, magic: %s, platform: %s", Hashcode, Magic, Platform)>;
 
 
 //*===============================================================================================
@@ -95,12 +95,12 @@ typedef struct
 	short 	MinDelay;
 	short 	MaxDelay;
 	ubyte	ReverbSend;
-	ubyte 	TrackingType;
+    enum<ubyte> TTyp{TT_2D, TT_Amb, TT_3D, TT_3D_Rnd_Pos, TT_2D_PL2};
+	TTyp 	TrackingType;
 	ubyte	MaxVoices;
 	ubyte	Priority;
 	ubyte	Ducker;
 	ubyte 	MasterVolume;
-
 
     short GroupHashCode : 4;
     short GroupMaxChannels : 12; 
@@ -119,11 +119,11 @@ typedef struct
 	    ubyte RandomVolumeOffset;
 	    ubyte Pan;
 	    ubyte RandomPan;
-    } smpParams[SamplesCount];
+    } smpParams[SamplesCount] <read=Str("fileref: %i, bvol: %u, pan: %u", FileRef, BaseVolume, Pan), optimize=true>;
 
     local uint idx = index;
 
-} Sounds <read=Str("hc: %#010x | sampl: %u, group: %u %u", StoredSound[idx].HashCode, SamplesCount, GroupHashCode, GroupMaxChannels)>;
+} Sounds <read=Str("hc: %#010x | sampl: %u, group: %u %u (%s)", StoredSound[idx].HashCode, SamplesCount, GroupHashCode, GroupMaxChannels, EnumToString(TrackingType))>;
 
 for (index = 0; index < totalSounds; index++)
 {
@@ -169,10 +169,13 @@ typedef struct
 for (index = 0; index < totalSamples; index++)
     SampleInfo sampleInfoParams;
 
-//Read Special Sample Info Section
 
+//Read Special Sample Info Section
 typedef struct
 {
+    SetBackColor(cLtGreen);
+
+    /* swy: this stored the GameCube-specific playback metadata; not needed for other platforms */
 	uint NumSamples;
 	uint NibblesADPCM;
 	uint SampleRate;
@@ -202,10 +205,6 @@ if (SBHeader.SampleInfoStart != SBHeader.SpecialSampleInfoStart)
 	}
 	
 	local int totalSpecialSamples = SBHeader.SpecialSampleInfoLength / sizeof(SpecialSample);
-	index = 0;
 	for (index = 0; index < totalSpecialSamples; index++)
-	{
-		SetBackColor(cLtGreen);
 		SpecialSample specialInfo;
-	}
 }
