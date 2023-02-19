@@ -13,7 +13,6 @@
 //*===============================================================================================
 //* Typedefs for the sfx file
 //*===============================================================================================
-typedef char ID[4];
 typedef char Padding[2];
 
 //*===============================================================================================
@@ -24,11 +23,11 @@ LittleEndian(); local int sfxIsBigEndian = 0;
 
 typedef struct 
 {
-    ID     Magic;
+    char   Magic[4];
     uint   Hashcode<format=hex>;
     uint   ConstantOffset<format=hex>;
-    uint   FileSize;
-	ID     Platform;
+    uint   FileSize <format=hex>;
+	char   Platform[4];
 	uint   TimeSpan;
 	uint   unk;
 	uint   structPadding;
@@ -38,7 +37,7 @@ typedef struct
         Printf("[i] This is a GameCube SFX. Changing endianness to big-endian.");
         BigEndian(); sfxIsBigEndian = 1;
 	}
-} CommonHeader;
+} CommonHeader <read=Str("[%s] %#010x | %s", Magic, Hashcode, Platform)>;
 
 typedef struct
 {
