@@ -9,11 +9,6 @@
 // File Mask: *_sb_*.sfx
 //  ID Bytes: 4D 55 53 58
 //------------------------------------------------
- 
-//*===============================================================================================
-//* Typedefs for the sfx file
-//*===============================================================================================
-typedef char Padding[2];
 
 //*===============================================================================================
 //* DEFINE STRUCTS USED IN THE SFX FILE
@@ -120,7 +115,7 @@ typedef struct
 	    ubyte RandomVolumeOffset;
 	    ubyte Pan;
 	    ubyte RandomPan;
-	    Padding SectPadding;
+	    char SectPadding[2];
     } Samples;
 
     SetBackColor(cAqua);
