@@ -53,13 +53,16 @@ if(header.Magic != "MUSX")
 SetBackColor(cGreen);
 struct SoundBanksHeader
 {
-	uint	SFXStart<format=hex>;
+	uint	SFXStart <format=hex>;
 	uint 	SFXLength;
-	uint 	SampleInfoStart<format=hex>;
+
+	uint 	SampleInfoStart <format=hex>;
 	uint	SampleInfoLength;
-	uint	SpecialSampleInfoStart<format=hex>;
+
+	uint	SpecialSampleInfoStart <format=hex>;
 	uint	SpecialSampleInfoLength;
-	uint	SampleDataStart<format=hex>;
+
+	uint	SampleDataStart <format=hex>;
 	uint	SampleDataLength;
 } SBHeader;
 
@@ -77,9 +80,9 @@ SetBackColor(cBlue);
 
 struct SoundsArray
 {
-	uint	HashCode<format=hex>;
-	uint 	Location<format=hex>;
-} StoredSound[totalSounds];
+	uint	HashCode <format=hex>;
+	uint 	Location <format=hex>;
+} StoredSound[totalSounds] <read=Str("hc: %#010x | loc: %#010x", HashCode, Location)>;
 
 //Read SFX Array & SFX Params
 local int index = 0;
@@ -87,6 +90,7 @@ local long currentPos = 0;
 
 typedef struct
 {
+    SetBackColor(cLtRed);
 	short 	DuckerLength;
 	short 	MinDelay;
 	short 	MaxDelay;
@@ -120,12 +124,13 @@ typedef struct
 	    char SectPadding[2];
     } smpParams[SamplesCount];
 
-} Sounds;
+    local uint idx = index;
+
+} Sounds <read=Str("hc: %#010x | sampl: %u", StoredSound[idx].HashCode, SamplesCount)>;
 
 for (index = 0; index < totalSounds; index++)
 {
 	FSeek(StoredSound[index].Location + SBHeader.SFXStart);
-    SetBackColor(cLtRed);
 	Sounds sfxParams;
 }
 
@@ -146,30 +151,26 @@ typedef struct
 
 	uint 	Flags;
 	uint	Address;
-	uint 	AudioDataSize<format=hex>;
+	uint 	AudioDataSize <format=hex>;
 	uint 	Frequency;
-	uint 	RealSize;
+	uint 	RealSize <format=hex>;
 	uint	PSI;
 	uint	LoopOffset;
 	uint	Duration;
 
     /* -- */
 
-    currentPos = FTell(); FSeek(SBHeader.SampleDataStart + sampleInfoParams.Address);
+    currentPos = FTell(); FSeek(SBHeader.SampleDataStart + Address);
 
     SetBackColor(cDkRed);
     ubyte audioData[AudioDataSize];
 
     FSeek(currentPos);
-} SampleInfo <optimize=false>;
+} SampleInfo <optimize=false, read=Str("[/] freq: %u | durat: %u", Frequency, Duration)>;
 
 //Read samples params
-index = 0;
 for (index = 0; index < totalSamples; index++)
-{
-	
     SampleInfo sampleInfoParams;
-}
 
 //Read Special Sample Info Section
 
