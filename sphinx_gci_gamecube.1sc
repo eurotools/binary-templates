@@ -23,6 +23,7 @@ Printf(
     (old_checksum == new_checksum) ? "" : "didn't "
 );
 
-WriteUInt(0x40, new_checksum); /* swy: overwrite it in place */
+if (old_checksum != new_checksum)
+    WriteUInt(0x40, new_checksum); /* swy: overwrite it in place */
 
 Printf("\n[+] Done\n");
