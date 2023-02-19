@@ -154,17 +154,19 @@ if (FSeek( SBHeader.SFXStart ) < 0)
 //Get the number of stored sounds in this section
 uint totalSounds;
 
+SetBackColor(cBlue);
+SoundsArray StoredSound[totalSounds];
+
 //Read SFX Array & SFX Params
 local int index = 0;
 local int indexSamples = 0;
 local long currentPos = 0;
+
 for (index = 0; index < totalSounds; index++)
 {
-	SetBackColor(cBlue);
-    SoundsArray StoredSound;
 	currentPos = FTell();
 	
-	FSeek(StoredSound.Location + SBHeader.SFXStart);
+	FSeek(StoredSound[index].Location + SBHeader.SFXStart);
     SetBackColor(cLtRed);
 	Sounds sfxParams;
 	for (indexSamples = 0; indexSamples < sfxParams.SamplesCount; indexSamples++)
