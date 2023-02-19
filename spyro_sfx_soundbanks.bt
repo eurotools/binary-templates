@@ -126,7 +126,7 @@ typedef struct
 
     local uint idx = index;
 
-} Sounds <read=Str("hc: %#010x | sampl: %u", StoredSound[idx].HashCode, SamplesCount)>;
+} Sounds <read=Str("hc: %#010x | sampl: %u, group: %u %u", StoredSound[idx].HashCode, SamplesCount, GroupSettings.GroupHashCode, GroupSettings.GroupMaxChannels)>;
 
 for (index = 0; index < totalSounds; index++)
 {
@@ -150,7 +150,7 @@ typedef struct
     SetBackColor(cLtGreen);
 
 	uint 	Flags;
-	uint	Address;
+	uint	Address <format=hex>;
 	uint 	AudioDataSize <format=hex>;
 	uint 	Frequency;
 	uint 	RealSize <format=hex>;
@@ -163,10 +163,10 @@ typedef struct
     currentPos = FTell(); FSeek(SBHeader.SampleDataStart + Address);
 
     SetBackColor(cDkRed);
-    ubyte audioData[AudioDataSize];
+    ubyte audioData[RealSize];
 
     FSeek(currentPos);
-} SampleInfo <optimize=false, read=Str("[/] freq: %u | durat: %u", Frequency, Duration)>;
+} SampleInfo <optimize=false, read=Str("[/] freq: %u | durat: %u, offset: %x", Frequency, Duration, Address)>;
 
 //Read samples params
 for (index = 0; index < totalSamples; index++)
