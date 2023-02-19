@@ -165,7 +165,6 @@ SoundsArray StoredSound[totalSounds];
 
 //Read SFX Array & SFX Params
 local int index = 0;
-local int indexSamples = 0;
 local long currentPos = 0;
 
 for (index = 0; index < totalSounds; index++)
@@ -183,8 +182,7 @@ if (FSeek( SBHeader.SampleInfoStart ) < 0)
 }
 
 //Get the number of stored samples in this section
-local int totalSamples = ReadUInt(FTell());
-FSkip(sizeof(UINT));
+uint totalSamples;
 
 //Read samples params
 index = 0;
