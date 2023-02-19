@@ -95,22 +95,29 @@ typedef struct
 	short 	MinDelay;
 	short 	MaxDelay;
 	ubyte	ReverbSend;
-    enum<ubyte> TTyp{TT_2D, TT_Amb, TT_3D, TT_3D_Rnd_Pos, TT_2D_PL2};
+    enum<ubyte> TTyp {TT_2D, TT_Amb, TT_3D, TT_3D_Rnd_Pos, TT_2D_PL2};
 	TTyp 	TrackingType;
 	ubyte	MaxVoices;
 	ubyte	Priority;
 	ubyte	Ducker;
 	ubyte 	MasterVolume;
 
-    short GroupHashCode : 4;
-    short GroupMaxChannels : 12; 
+    union
+    {
+        short Data;
+        struct
+        {
+            short GroupHashCode : 4;
+            short GroupMaxChannels : 12;
+        } Split;
+    } Group;
 
 	short   Flags;
 	short	SamplesCount;
 
     SetBackColor(cAqua);
 
-    struct Samples
+    typedef struct
     {
 	    short FileRef;
 	    ubyte PitchOffset;
@@ -119,11 +126,16 @@ typedef struct
 	    ubyte RandomVolumeOffset;
 	    ubyte Pan;
 	    ubyte RandomPan;
-    } smpParams[SamplesCount] <read=Str("fileref: %i, bvol: %u, pan: %u", FileRef, BaseVolume, Pan), optimize=true>;
+    } Samples <read=Str(" [-] fileref: %i, pitch: %u/%u, bvol: %u/%u, pan: %u/%u", FileRef, PitchOffset, RandomPitchOffset, BaseVolume, RandomVolumeOffset, Pan, RandomPan), optimize=false>;
+
+    local int j = 0;
+
+    for (j=0; j<SamplesCount; j++) /* swy: avoid optimizations, so that each sample gets its own line */
+        Samples smpParam;
 
     local uint idx = index;
 
-} Sounds <read=Str("hc: %#010x | sampl: %u, group: %u %u (%s)", StoredSound[idx].HashCode, SamplesCount, GroupHashCode, GroupMaxChannels, EnumToString(TrackingType))>;
+} Sounds <read=Str("hc: %#010x | sampl: %u, group: %x; %u %u (%s)", StoredSound[idx].HashCode, SamplesCount, Group.Data, Group.Split.GroupHashCode, Group.Split.GroupMaxChannels, EnumToString(TrackingType)), optimize=false>;
 
 for (index = 0; index < totalSounds; index++)
 {
