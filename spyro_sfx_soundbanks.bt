@@ -39,29 +39,6 @@ typedef struct
 	}
 } CommonHeader <read=Str("[%s] %#010x | %s", Magic, Hashcode, Platform)>;
 
-typedef struct
-{
-	uint	SFXStart<format=hex>;
-	uint 	SFXLength;
-	uint 	SampleInfoStart<format=hex>;
-	uint	SampleInfoLength;
-	uint	SpecialSampleInfoStart<format=hex>;
-	uint	SpecialSampleInfoLength;
-	uint	SampleDataStart<format=hex>;
-	uint	SampleDataLength;
-} SoundBanksHeader;
-
-typedef struct
-{
-	uint	HashCode<format=hex>;
-	uint 	Location<format=hex>;
-} SoundsArray;
-
-struct Group
-{ 
-    short GroupHashCode : 4;
-    short GroupMaxChannels : 12; 
-};
 
 typedef struct
 {
@@ -74,7 +51,13 @@ typedef struct
 	ubyte	Priority;
 	ubyte	Ducker;
 	ubyte 	MasterVolume;
-	struct  Group GroupSettings;
+
+	struct Group
+    { 
+        short GroupHashCode : 4;
+        short GroupMaxChannels : 12; 
+    } GroupSettings;
+
 	short   Flags;
 	short	SamplesCount;
 
@@ -94,7 +77,6 @@ typedef struct
 	Samples smpParams[SamplesCount];
 
 } Sounds;
-
 
 
 typedef struct
@@ -147,7 +129,17 @@ if(header.Magic != "MUSX")
 
 // Read Soundbanks Header
 SetBackColor(cGreen);
-SoundBanksHeader SBHeader;
+struct SoundBanksHeader
+{
+	uint	SFXStart<format=hex>;
+	uint 	SFXLength;
+	uint 	SampleInfoStart<format=hex>;
+	uint	SampleInfoLength;
+	uint	SpecialSampleInfoStart<format=hex>;
+	uint	SpecialSampleInfoLength;
+	uint	SampleDataStart<format=hex>;
+	uint	SampleDataLength;
+} SBHeader;
 
 //Go to SFXStart pos
 if (FSeek( SBHeader.SFXStart ) < 0)
@@ -160,7 +152,12 @@ if (FSeek( SBHeader.SFXStart ) < 0)
 uint totalSounds;
 
 SetBackColor(cBlue);
-SoundsArray StoredSound[totalSounds];
+
+struct SoundsArray
+{
+	uint	HashCode<format=hex>;
+	uint 	Location<format=hex>;
+} StoredSound[totalSounds];
 
 //Read SFX Array & SFX Params
 local int index = 0;
