@@ -18,10 +18,10 @@ LittleEndian(); local int sfxIsBigEndian = 0;
 
 typedef struct 
 {
-    char   Magic[4];
-    uint   Hashcode<format=hex>;
-    uint   ConstantOffset<format=hex>;
-    uint   FileSize <format=hex>;
+	char   Magic[4];
+	uint   Hashcode<format=hex>;
+	uint   ConstantOffset<format=hex>;
+	uint   FileSize <format=hex>;
 	char   Platform[4];
 	uint   TimeSpan;
 	uint   unk;
@@ -29,8 +29,8 @@ typedef struct
 
 	if (ReadUInt() != 0x0800) /* For GC */
 	{
-        Printf("[i] This is a GameCube SFX. Changing endianness to big-endian.");
-        BigEndian(); sfxIsBigEndian = 1;
+		Printf("[i] This is a GameCube SFX. Changing endianness to big-endian.");
+		BigEndian(); sfxIsBigEndian = 1;
 	}
 } CommonHeader <read=Str("soundbank hc: %#010x, magic: %s, platform: %s", Hashcode, Magic, Platform)>;
 
@@ -45,8 +45,8 @@ CommonHeader header;
 // Check for valid header
 if(header.Magic != "MUSX")
 {
-    Warning( "File is not a valid SFX file. Template stopped." );
-    return -1;
+	Warning( "File is not a valid SFX file. Template stopped." );
+	return -1;
 }
 
 // Read Soundbanks Header
@@ -90,49 +90,49 @@ local long currentPos = 0;
 
 typedef struct
 {
-    SetBackColor(cDkRed);
+	SetBackColor(cDkRed);
 	short 	DuckerLength; SetBackColor(cRed);
 	short 	MinDelay;
 	short 	MaxDelay;
 	ubyte	ReverbSend;
-    enum<ubyte> TTyp {TT_2D, TT_Amb, TT_3D, TT_3D_Rnd_Pos, TT_2D_PL2};
+	enum<ubyte> TTyp {TT_2D, TT_Amb, TT_3D, TT_3D_Rnd_Pos, TT_2D_PL2};
 	TTyp 	TrackingType;
 	ubyte	MaxVoices;
 	ubyte	Priority;
 	ubyte	Ducker;
 	ubyte 	MasterVolume;
 
-    union
-    {
-        short Data;
-        struct
-        {
-            short GroupHashCode : 4;
-            short GroupMaxChannels : 12;
-        } Split;
-    } Group;
+	union
+	{
+		short Data;
+		struct
+		{
+			short GroupHashCode : 4;
+			short GroupMaxChannels : 12;
+		} Split;
+	} Group;
 
 	short   Flags;
 	short	SamplesCount;
 
-    typedef struct
-    {
-        SetBackColor(cLtBlue);
-	    short FileRef; SetBackColor(cAqua);
-	    ubyte PitchOffset;
-	    ubyte RandomPitchOffset;
-	    ubyte BaseVolume;
-	    ubyte RandomVolumeOffset;
-	    ubyte Pan;
-	    ubyte RandomPan;
-    } Samples <read=Str(" [-] fileref: %i, pitch: %u/%u, bvol: %u/%u, pan: %u/%u", FileRef, PitchOffset, RandomPitchOffset, BaseVolume, RandomVolumeOffset, Pan, RandomPan), optimize=false>;
+	typedef struct
+	{
+		SetBackColor(cLtBlue);
+		short FileRef; SetBackColor(cAqua);
+		ubyte PitchOffset;
+		ubyte RandomPitchOffset;
+		ubyte BaseVolume;
+		ubyte RandomVolumeOffset;
+		ubyte Pan;
+		ubyte RandomPan;
+	} Samples <read=Str(" [-] fileref: %i, pitch: %u/%u, bvol: %u/%u, pan: %u/%u", FileRef, PitchOffset, RandomPitchOffset, BaseVolume, RandomVolumeOffset, Pan, RandomPan), optimize=false>;
 
-    local int j = 0;
+	local int j = 0;
 
-    for (j=0; j<SamplesCount; j++) /* swy: avoid optimizations, so that each sample gets its own line */
-        Samples smpParam;
+	for (j=0; j<SamplesCount; j++) /* swy: avoid optimizations, so that each sample gets its own line */
+		Samples smpParam;
 
-    local uint idx = index;
+	local uint idx = index;
 
 } Sounds <read=Str("hc: %#010x | sampl: %u, group: %x; %u %u (%s)", StoredSound[idx].HashCode, SamplesCount, Group.Data, Group.Split.GroupHashCode, Group.Split.GroupMaxChannels, EnumToString(TrackingType)), optimize=false>;
 
@@ -155,7 +155,7 @@ uint totalSamples;
 
 typedef struct
 {
-    SetBackColor(cLtGreen);
+	SetBackColor(cLtGreen);
 
 	uint 	Flags;
 	uint	Address <format=hex>;
@@ -166,27 +166,27 @@ typedef struct
 	uint	LoopOffset;
 	uint	Duration;
 
-    /* -- */
+	/* -- */
 
-    currentPos = FTell(); FSeek(SBHeader.SampleDataStart + Address);
+	currentPos = FTell(); FSeek(SBHeader.SampleDataStart + Address);
 
-    SetBackColor(cDkRed);
-    ubyte audioData[RealSize];
+	SetBackColor(cDkRed);
+	ubyte audioData[RealSize];
 
-    FSeek(currentPos);
+	FSeek(currentPos);
 } SampleInfo <optimize=false, read=Str("[/] freq: %u | durat: %u, offset: %x", Frequency, Duration, Address)>;
 
 //Read samples params
 for (index = 0; index < totalSamples; index++)
-    SampleInfo sampleInfoParams;
+	SampleInfo sampleInfoParams;
 
 
 //Read Special Sample Info Section
 typedef struct
 {
-    SetBackColor(cLtGreen);
+	SetBackColor(cLtGreen);
 
-    /* swy: this stored the GameCube-specific playback metadata; not needed for other platforms */
+	/* swy: this stored the GameCube-specific playback metadata; not needed for other platforms */
 	uint NumSamples;
 	uint NibblesADPCM;
 	uint SampleRate;
