@@ -104,11 +104,11 @@ typedef struct
 
 	union
 	{
-		short Data;
+		short Data <format=hex>;
 		struct
 		{
-			short GroupHashCode : 4;
-			short GroupMaxChannels : 12;
+			short GroupHashCode : 8 <format=hex>;
+			short GroupMaxChannels : 8 <format=hex>;
 		} Split;
 	} Group;
 
@@ -134,7 +134,7 @@ typedef struct
 
 	local uint idx = index;
 
-} Sounds <read=Str("hc: %#010x | sampl: %u, group: %x; %u %u (%s)", StoredSound[idx].HashCode, SamplesCount, Group.Data, Group.Split.GroupHashCode, Group.Split.GroupMaxChannels, EnumToString(TrackingType)), optimize=false>;
+} Sounds <read=Str("hc: %#010x | sampl: %u, group: %x; %x %x (%s)", StoredSound[idx].HashCode, SamplesCount, Group.Data, Group.Split.GroupHashCode, Group.Split.GroupMaxChannels, EnumToString(TrackingType)), optimize=false>;
 
 for (index = 0; index < totalSounds; index++)
 {
