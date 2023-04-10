@@ -7,10 +7,11 @@
 //   Purpose: This will probably work for any other GCI saves, I think.
 //  Category: Game
 // File Mask: *.gci
-//  ID Bytes: 47 35 53 ??
 //------------------------------------------------
 
 BigEndian();
+
+#include "hashcodes_enum.h"
 
 struct
 {
@@ -245,6 +246,7 @@ typedef struct
         breath_ice = 4,
         breath_electric = 8,
     } breath_selected;
+    
     uint health, gem_total_count, gem_counter;
 
     ubyte lock_pick_count,lock_pick_limit,a,b;
@@ -294,29 +296,79 @@ typedef struct
         bool abiflg_double_jump : 1;
     } ability_flags;
     
-    uint unk_a <format=hex>, zero, zero, zero, zero, unk_c <format=hex>, unk_d <format=hex>, zero;
-    ushort thing, thong, thung, thang, zero_pad_maybe;
+    //uint unk_a <format=hex>, zero, zero, zero, zero, unk_c <format=hex>, unk_d <format=hex>, zero;
+    float blink_cooldown, supercharge_cooldown, unk_cooldown1, invincibility_cooldown, cooldown_upperbound, unk_cooldown2, unk_cooldown3, sgtbyrd_boost;
+    ushort sgtbyrd_bombs, sgtbyrd_missiles, thung, thang, zero_pad_maybe;
     ubyte light_gems, dark_gems, eggs, more;
     ushort alignment_b;
     uint zero;
-    float x, y, z; float rot_a, rot_b, rot_c, bb;
-    uint trigger_state_bitflags[(0x43b2 / 4) - 8];
+    float player_spawn_pos_x, player_spawn_pos_y, player_spawn_pos_z, player_spawn_pos_padding; float player_spawn_rot_p, player_spawn_rot_y, player_spawn_rot_r, player_spawn_rot_padding;
+    
+    uint character_UI, thing, thxng, thyng, thzng, thcng;
+    //uint maininfo_endpad[0x20 / 4];
+    uint bytepad_maybe[(0x90 / 4)];
 
+    BitfieldDisablePadding();
+    
+    enum<uint> objective_state
+    {
+        Uncompleted = 0,
+        Completed = 1,
+    };
+    
+    struct {
+        local int num_of_objectives = 0x200;
+        local int num_of_completed_objectives = 0;
+        for (i = 0; i < num_of_objectives; i++) {
+            struct {
+                objective_state o_state : 1;
+                local EXHashCode o_hash = (i+1) | 0x44000000;
+                if (o_state == 1) { num_of_completed_objectives++; }
+            } objective <read=Str("[%s] - %s", EnumToString(o_state), EnumToString(o_hash)), optimize=false>;
+        }
+    } objectives <read=Str("%d completed", num_of_completed_objectives), optimize=false>;
+    
+    enum<uint> task_state
+    {
+        Not_Found = 0,
+        Not_Done = 1,
+        INVALID = 2,
+        Done = 3,
+    };
+    
+    struct {
+        local int num_of_tasks = 0x50;
+        local int num_of_tasks_found = 0;
+        local int num_of_tasks_done = 0;
+        for (i = 0; i < num_of_tasks; i++) {
+            struct {
+                task_state t_state : 2;
+                local EXHashCode t_hash = (i+1) | 0x45000000;
+                if (t_state == 1) { num_of_tasks_found++; }
+                if (t_state == 3) { num_of_tasks_found++; num_of_tasks_done++; }
+            } task <read=Str("[%s] - %s", EnumToString(t_state), EnumToString(t_hash)), optimize=false>;
+        }
+    } tasks <read=Str("%d/%d done", num_of_tasks_done, num_of_tasks_found), optimize=false>;
+    uint trigger_state_bitflags[(0x4292 / 4)];
+    
     local uint map_count = 0;
     typedef struct
     {
         int start_point_hashcode <format=hex>;
         int one_or_zero;
-        int p[10] <format=hex>;
+        int total_dark_gems;
+        int total_dragon_eggs;
+        int total_light_gems;
+        int p[7] <format=hex>;
         struct
         {
             int lvl_darkgem_tally, lvl_lightgem_tally, lvl_egg_conceptart_tally, lvl_egg_charviewer_tally, lvl_egg_ember_tally, lvl_egg_flame_tally, lvl_egg_blink_tally, lvl_egg_turret_tally, lvl_egg_sparx_tally, lvl_egg_blink_tally;
         } level_collectible_tallies;
         int one_or_zero_b, f <format=hex>, g;
         local enum map_list cur_map = map_count++;
-    } start_point <read=Str("[%x] - %s", start_point_hashcode, EnumToString(cur_map)), optimize=false>;
+    } level_stat <read=Str("[%x] - %s", start_point_hashcode, EnumToString(cur_map)), optimize=false>;
 
-    start_point start_point_for_level[200]; /* swy: there's one start point set for level; e.g. if the current map is Dragon_Village (23), the game uses the array element on index 23, each fairy check/restart point is tagged with an unique hashcode: 0x4A000005, 0x4A000006, ... */
+    level_stat level_stats[200]; /* swy: there's one start point set for level; e.g. if the current map is Dragon_Village (23), the game uses the array element on index 23, each fairy check/restart point is tagged with an unique hashcode: 0x4A000005, 0x4A000006, ... */
 
     uint alignment_pad_end <format=hex>;
 
