@@ -11,7 +11,7 @@
 
 BigEndian();
 
-#include "hashcodes_enum.h"
+#include "spyro_hashcodes_enum.h"
 
 struct
 {
