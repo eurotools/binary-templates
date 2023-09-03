@@ -1,0 +1,222 @@
+//------------------------------------------------
+//--- 010 Editor v11.0.1 Binary Template
+//
+//      File: RobotsSoundBanks.bt
+//   Authors: jmarti856, Swyter
+//   Version: 1.0
+//   Purpose: Parse SFX soundbanks files.
+//  Category: Audio
+// File Mask: *_sb_*.sfx
+//  ID Bytes: 4D 55 53 58
+//------------------------------------------------
+
+//*===============================================================================================
+//* DEFINE STRUCTS USED IN THE SFX FILE
+//*===============================================================================================
+//The first parameters of the header are always little endian
+LittleEndian(); local int sfxIsBigEndian = 0;
+
+typedef struct 
+{
+	char   Magic[4];
+	uint   Hashcode<format=hex>;
+	uint   ConstantOffset<format=hex>;
+	uint   FileSize <format=hex>;
+	char   Platform[4];
+	uint   TimeSpan;
+	uint   unk;
+	uint   structPadding;
+
+	if (ReadUInt() != 0x0800) /* For GC */
+	{
+		Printf("[i] This is a GameCube SFX. Changing endianness to big-endian.");
+		BigEndian(); sfxIsBigEndian = 1;
+	}
+} CommonHeader <read=Str("soundbank hc: %#010x, magic: %s, platform: %s", Hashcode, Magic, Platform)>;
+
+
+//*===============================================================================================
+//* READ FILE
+//*===============================================================================================
+// Define the headers
+SetBackColor(cLtPurple);
+CommonHeader header;
+
+// Check for valid header
+if(header.Magic != "MUSX")
+{
+	Warning( "File is not a valid SFX file. Template stopped." );
+	return -1;
+}
+
+// Read Soundbanks Header
+SetBackColor(cGreen);
+struct SoundBanksHeader
+{
+	uint	SFXStart <format=hex>;
+	uint 	SFXLength;
+
+	uint 	SampleInfoStart <format=hex>;
+	uint	SampleInfoLength;
+
+	uint	SpecialSampleInfoStart <format=hex>;
+	uint	SpecialSampleInfoLength;
+
+	uint	SampleDataStart <format=hex>;
+	uint	SampleDataLength;
+} SBHeader;
+
+//Go to SFXStart pos
+if (FSeek( SBHeader.SFXStart ) < 0)
+{
+	Warning( "Error searching the SFX start position");
+	return -1;
+}
+
+//Get the number of stored sounds in this section
+uint totalSounds;
+
+SetBackColor(cBlue);
+
+struct SoundsArray
+{
+	uint	HashCode <format=hex>;
+	uint 	Location <format=hex>;
+} StoredSound[totalSounds] <read=Str("hc: %#010x | loc: %#010x", HashCode, Location)>;
+
+//Read SFX Array & SFX Params
+local int index = 0;
+local long currentPos = 0;
+
+typedef struct
+{
+	SetBackColor(cDkRed);
+	short 	DuckerLength; SetBackColor(cRed);
+	short 	MinDelay;
+	short 	MaxDelay;
+	ubyte	ReverbSend;
+	enum<ubyte> TTyp {TT_2D, TT_Amb, TT_3D, TT_3D_Rnd_Pos, TT_2D_PL2};
+	TTyp 	TrackingType;
+	ubyte	MaxVoices;
+	ubyte	Priority;
+	ubyte	Ducker;
+	ubyte 	MasterVolume;
+	union
+	{
+		short Data <format=hex>;
+		struct
+		{
+			short GroupHashCode : 8 <format=hex>;
+			short GroupMaxChannels : 8 <format=hex>;
+		} Split;
+	} Group;
+	short   Flags;
+	short	UserFlags;
+	ubyte	DopplerValue;
+	ubyte	UserValue;
+	short	SamplesCount;
+
+	typedef struct
+	{
+		SetBackColor(cLtBlue);
+		short FileRef; SetBackColor(cAqua);
+		ubyte PitchOffset;
+		ubyte RandomPitchOffset;
+		ubyte BaseVolume;
+		ubyte RandomVolumeOffset;
+		ubyte Pan;
+		ubyte RandomPan;
+	} Samples <read=Str(" [-] fileref: %i, pitch: %u/%u, bvol: %u/%u, pan: %u/%u", FileRef, PitchOffset, RandomPitchOffset, BaseVolume, RandomVolumeOffset, Pan, RandomPan), optimize=false>;
+
+	local int j = 0;
+
+	for (j=0; j<SamplesCount; j++) /* swy: avoid optimizations, so that each sample gets its own line */
+		Samples smpParam;
+
+	local uint idx = index;
+
+} Sounds <read=Str("hc: %#010x | sampl: %u, group: %x; %x %x (%s)", StoredSound[idx].HashCode, SamplesCount, Group.Data, Group.Split.GroupHashCode, Group.Split.GroupMaxChannels, EnumToString(TrackingType)), optimize=false>;
+
+for (index = 0; index < totalSounds; index++)
+{
+	FSeek(StoredSound[index].Location + SBHeader.SFXStart);
+	Sounds sfxParams;
+}
+
+
+//Read Sample Info Section
+if (FSeek( SBHeader.SampleInfoStart ) < 0)
+{
+	Warning( "Error searching the sample info start position");
+	return -1;
+}
+
+//Get the number of stored samples in this section
+uint totalSamples;
+
+typedef struct
+{
+	SetBackColor(cLtGreen);
+
+	uint 	Flags;
+	uint	Address <format=hex>;
+	uint 	AudioDataSize <format=hex>;
+	uint 	Frequency;
+	uint 	RealSize <format=hex>;
+	uint	PSI;
+	uint	LoopOffset;
+	uint	Duration;
+
+	/* -- */
+
+	currentPos = FTell(); FSeek(SBHeader.SampleDataStart + Address);
+
+	SetBackColor(cDkRed);
+	ubyte audioData[RealSize];
+
+	FSeek(currentPos);
+} SampleInfo <optimize=false, read=Str("[/] freq: %u | durat: %u, offset: %x", Frequency, Duration, Address)>;
+
+//Read samples params
+for (index = 0; index < totalSamples; index++)
+	SampleInfo sampleInfoParams;
+
+
+//Read Special Sample Info Section
+typedef struct
+{
+	SetBackColor(cLtGreen);
+
+	/* swy: this stored the GameCube-specific playback metadata; not needed for other platforms */
+	uint NumSamples;
+	uint NibblesADPCM;
+	uint SampleRate;
+	ushort LoopFlag;
+	ushort Format;
+	uint StartOffset;
+	uint EndOffset;
+	uint unk;
+	ushort DecodeCoefficients[16]<format=hex>;
+	ushort Gain;
+	ushort Predictor;
+	ushort SampleHistory;
+	ushort SampleHistory2;
+	ushort PredictorLoop;
+	ushort SampleHistoryLoop;
+	ushort SampleHistoryLoop2;
+	ushort PaddingSamples[10];
+	ushort padding;
+} SpecialSample;
+
+if (SBHeader.SampleInfoStart != SBHeader.SpecialSampleInfoStart)
+{
+	if (FSeek(SBHeader.SpecialSampleInfoStart ) < 0)
+	{
+		Warning( "Error searching the special sample info start position");
+		return -1;
+	}
+	
+	local int totalSpecialSamples = SBHeader.SpecialSampleInfoLength / sizeof(SpecialSample);
+	for (index = 0; index < totalSpecialSamples; index++)
+		SpecialSample specialInfo;
+}
