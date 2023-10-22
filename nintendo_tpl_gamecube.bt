@@ -4,22 +4,20 @@
 //      File: Nintendo TPL texture format for the GameCube
 //   Authors: Swyter
 //   Version: 2023.10.22
-//   Purpose: 
 //  Category: Game
 // File Mask: *.tpl
 //  ID Bytes: 00 20 AF 30
-//   History: 
 //------------------------------------------------
 
 BigEndian();
 
-uint32 magic <format=hex>;
+uint32 magic <format=hex>; /* swy: 00 20 AF 30 */
 uint32 texture_count;
 uint32 tpl_header_size;
 
 struct
 {
-    uint32 size_something;
+    uint32 texture_desc_pos_offset;
     uint32 palette_pos_offset;
 } texture[texture_count] <open=true>;
 
@@ -49,11 +47,11 @@ struct
         FMT_7,
         FMT_8,
         FMT_9,
-        FMT_10,
+        FMT_C14X2, /* swy: 14-bit color indices in 16-bit/2-bytes with 2 wasted bits; 16384 colors in RGB565 format */
         FMT_11,
         FMT_12,
         FMT_13,
-        FMT_S3TC,
+        FMT_S3TC,  /* swy: S3 Texture Compression, same as DXT1 or BC1, 4x4 texel blocks, 4-bit per texel, two interpolated RGB565 colors (turning them into a palette of 3+alpha or 4 indexed colors) with optionally 1-bit cutout alpha */
         FMT_15,
         FMT_16,
     } texel_format;
@@ -69,7 +67,7 @@ struct
     ubyte always_zero_byte;
     ubyte base_lod, last_lod;
     ubyte pad_garbage_data_maybe;
-} unk[1] <open=true>;
+} texture_descriptor[1] <open=true>;
 
 ubyte align_garbage_data[8];
 
