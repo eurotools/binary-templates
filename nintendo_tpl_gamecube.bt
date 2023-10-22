@@ -1,0 +1,32 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: Nintendo TPL texture format for the GameCube
+//   Authors: Swyter
+//   Version: 2023.10.22
+//   Purpose: 
+//  Category: Game
+// File Mask: 
+//  ID Bytes: 00 20 AF 30
+//   History: 
+//------------------------------------------------
+
+BigEndian();
+
+uint32 magic <format=hex>;
+uint32 texture_count;
+uint32 tpl_header_size;
+
+struct
+{
+    uint32 size_something;
+    uint32 palette_pos_offset;
+} texture[texture_count];
+
+struct
+{
+    uint16 pal_table_size;
+    uint16 zero;
+    uint32 format;
+    uint32 sum_size;
+} palette[0];
