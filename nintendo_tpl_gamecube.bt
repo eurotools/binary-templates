@@ -35,7 +35,27 @@ struct
 {
     uint16 layer_height,
            layer_width;
-    uint32 texel_format;
+    enum <uint32>
+    {
+        
+        FMT_0,
+        FMT_1,
+        FMT_2,
+        FMT_3,
+        FMT_4,
+        FMT_5,
+        FMT_6,
+        FMT_7,
+        FMT_8,
+        FMT_9,
+        FMT_10,
+        FMT_11,
+        FMT_12,
+        FMT_13,
+        FMT_S3TC,
+        FMT_15,
+        FMT_16,
+    } texel_format;
     uint32 compressed_size;
     uint32 wrap_s, wrap_t;
     uint32 texel_fmt_result;
