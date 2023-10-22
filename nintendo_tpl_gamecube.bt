@@ -29,7 +29,8 @@ struct
     uint16 zero;
     uint32 format;
     uint32 sum_size;
-} palette[0] <open=true>;
+    ubyte stuff[sum_size];
+} palette[texture[0].palette_pos_offset ? 1 : 0] <open=true, optimize=false>;
 
 struct
 {
@@ -57,7 +58,11 @@ struct
         FMT_16,
     } texel_format;
     uint32 compressed_size;
-    uint32 wrap_s, wrap_t;
+    enum <uint32>
+    {
+        coords_clamp,
+        coords_repeat
+    } wrap_s, wrap_t; /* swy: when wrap is on the texture tiles in that UV space dimension, otherwise the border/edge color will appear forever */
     uint32 texel_fmt_result;
     uint32 always_one_uint;
     uint32 always_zero_uint;
