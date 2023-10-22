@@ -6,7 +6,7 @@
 //   Version: 2023.10.22
 //   Purpose: 
 //  Category: Game
-// File Mask: 
+// File Mask: *.tpl
 //  ID Bytes: 00 20 AF 30
 //   History: 
 //------------------------------------------------
@@ -21,7 +21,7 @@ struct
 {
     uint32 size_something;
     uint32 palette_pos_offset;
-} texture[texture_count];
+} texture[texture_count] <open=true>;
 
 struct
 {
@@ -29,7 +29,7 @@ struct
     uint16 zero;
     uint32 format;
     uint32 sum_size;
-} palette[0];
+} palette[0] <open=true>;
 
 struct
 {
@@ -43,9 +43,9 @@ struct
     uint32 always_zero_uint;
     ubyte always_zero_byte;
     ubyte base_lod, last_lod;
-    ubyte pad_maybe;
-} unk[1];
+    ubyte pad_garbage_data_maybe;
+} unk[1] <open=true>;
 
-ubyte align[8];
+ubyte align_garbage_data[8];
 
 ubyte mipmap_data[8*8];
