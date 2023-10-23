@@ -37,14 +37,14 @@ struct
     enum <uint32>
     {
         
-        FMT_0,
-        FMT_1,
-        FMT_2,
-        FMT_3,
-        FMT_4,
-        FMT_5,
+        FMT_I4,    /* swy: Greyscale */
+        FMT_I8,    /* swy: Greyscale */
+        FMT_IA4,   /* swy: Greyscale + Alpha */
+        FMT_IA8,   /* swy: Greyscale + Alpha */
+        FMT_RGB,   /* swy: 565;  R5G6B5   */
+        FMT_xRGBA, /* swy: 4443; R4G4B4A3 */
         FMT_6,
-        FMT_7,
+        FMT_RGBA,  /* swy: 8888; R8G8B8A8 */
         FMT_8,
         FMT_9,
         FMT_C14X2, /* swy: 14-bit color indices in 16-bit/2-bytes with 2 wasted bits; 16384 colors in RGB565 format */
