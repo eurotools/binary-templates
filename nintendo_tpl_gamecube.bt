@@ -47,7 +47,7 @@ struct
         FMT_7,
         FMT_C4,    /* swy:    16 Colours RGB565 */ /*  4-bit color indices */
         FMT_C8,    /* swy:   256 Colours RGB565 */ /*  8-bit color indices */
-        FMT_C14X2, /* swy: 16384 Colours RGB565 */ /* 14-bit color indices in 16-bit/2-bytes with 2 wasted bits; format */
+        FMT_C14X2, /* swy: 16384 Colours RGB565 */ /* 14-bit color indices in 16-bit/2-bytes with 2 wasted bits; weird format that was unimplemented in Euroland and mapped to S3TC, D3D doesn't have a D3DFMT_P16, only D3DFMT_P8 */
         FMT_11,
         FMT_12,
         FMT_13,
