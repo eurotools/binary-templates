@@ -1,7 +1,7 @@
 //------------------------------------------------
 //--- 010 Editor v14.0 Binary Template
 //
-//      File: Nintendo TPL texture format for the GameCube
+//      File: Nintendo TPL texture palette (template?) format for the GameCube
 //   Authors: Swyter
 //   Version: 2023.10.22
 //  Category: Game
@@ -36,7 +36,6 @@ struct
            layer_width;
     enum <uint32>
     {
-        
         FMT_I4,    /* swy: Greyscale */
         FMT_I8,    /* swy: Greyscale */
         FMT_IA4,   /* swy: Greyscale + Alpha */
@@ -67,7 +66,7 @@ struct
     ubyte always_zero_byte;
     ubyte base_lod, last_lod;
     ubyte pad_garbage_data_maybe;
-} texture_descriptor[1] <open=true>;
+} texture_descriptor[texture_count] <open=true>;
 
 ubyte align_garbage_data[8];
 
