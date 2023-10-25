@@ -71,7 +71,39 @@ struct
     ubyte pad_garbage_data_maybe;
 } texture_descriptor[texture_count] <open=true>;
 
-ubyte align_garbage_data[((FTell() + 128-1) & ~(128-1)) - FTell()];
+/* swy: align the texture data to 64-byte sectors for DMA or caching reasons */
+ubyte align_garbage_data[((FTell() + 64-1) & ~(64-1)) - FTell()];
 
-ubyte mipmap_data[(32*96) * 2 ];
-ubyte mipmap_date[(32*32) * 2 ];
+
+local int i = 0; local uint w, h; local float bpp = 2;
+for (i = 0; i < texture_count; i++)
+{
+    w = texture_descriptor[i].layer_width, h = texture_descriptor[i].layer_height;
+
+    struct
+    {
+        switch(texture_descriptor[i].texel_format)
+        {
+            case FMT_I4:
+            case FMT_C4:
+                bpp = 0.5;
+                break;
+            case FMT_I8:
+            case FMT_IA4:
+            case FMT_C8:
+                bpp = 1;
+                break;
+            case FMT_RGB565:
+            case FMT_RGB4A3:
+            case FMT_C14X2:
+                bpp = 2;
+                break;
+            case FMT_RGBA8:
+                bpp = 4;
+                break;
+        }
+        
+        Printf("%u: %u x %u x %g\n", i, w, h, bpp);
+        ubyte mipmap_data[(w * h) * bpp];
+    } tex_data <optimize=false>;
+}
