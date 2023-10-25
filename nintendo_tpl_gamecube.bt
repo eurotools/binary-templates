@@ -17,7 +17,7 @@ uint32 tpl_header_size;
 
 struct
 {
-    uint32 texture_desc_pos_offset <format=hex>;
+    uint32 texture_desc_pos_offset <format=hex>; /* swy: absolute start positions of each structure, or 0 if they are missing (i.e. no palette section because it's unneeded) */
     uint32      palette_pos_offset <format=hex>;
 } texture[texture_count] <open=true>;
 
@@ -28,7 +28,7 @@ struct
     uint32 format;
     uint32 sum_size;
     
-         if (pal_color_count == 16384) ushort stuff[2080 / 2];
+         if (pal_color_count == 16384) ushort stuff[2080 / 2]; /* swy: ??? */
     else if (pal_color_count ==   256) ushort stuff[  64 / 2];
     
 } palette[texture[0].palette_pos_offset ? 1 : 0] <open=true, optimize=false>;
@@ -57,16 +57,16 @@ struct
         FMT_15       = 15,
         FMT_16       = 16,
     } texel_format;
-    uint32 compressed_size;
+    uint32 texture_data_pos_offset <format=hex>; /* swy: absolute start position in the binary file of the pixels themselves */
     enum <uint32>
     {
         coords_clamp,
         coords_repeat
     } wrap_s, wrap_t; /* swy: when wrap is on the texture tiles in that UV space dimension, otherwise the border/edge color will appear forever */
     uint32 texel_fmt_result;
-    uint32 always_one_uint;
-    uint32 always_zero_uint;
-    ubyte always_zero_byte;
+    uint32 unk_always_one_uint;
+    uint32 unk_always_zero_uint;
+    ubyte unk_always_zero_byte;
     ubyte base_lod, last_lod;
     ubyte pad_garbage_data_maybe;
 } texture_descriptor[texture_count] <open=true>;
@@ -78,7 +78,10 @@ ubyte align_garbage_data[((FTell() + 64-1) & ~(64-1)) - FTell()];
 local int i = 0; local uint w, h; local float bpp = 2;
 for (i = 0; i < texture_count; i++)
 {
-    w = texture_descriptor[i].layer_width, h = texture_descriptor[i].layer_height;
+    FSeek(texture_descriptor[i].texture_data_pos_offset);
+
+    w = texture_descriptor[i].layer_width,
+    h = texture_descriptor[i].layer_height;
 
     struct
     {
@@ -91,6 +94,7 @@ for (i = 0; i < texture_count; i++)
             case FMT_I8:
             case FMT_IA4:
             case FMT_C8:
+            case FMT_S3TC:
                 bpp = 1;
                 break;
             case FMT_RGB565:
@@ -101,6 +105,8 @@ for (i = 0; i < texture_count; i++)
             case FMT_RGBA8:
                 bpp = 4;
                 break;
+            default:
+                Warning("FIXME: Unhandled format\n");
         }
         
         Printf("%u: %u x %u x %g\n", i, w, h, bpp);
