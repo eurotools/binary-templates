@@ -30,7 +30,7 @@ struct
     
          if (pal_color_count == 16384) ushort stuff[2080 / 2]; /* swy: ??? */
     else if (pal_color_count ==   256) ushort stuff[  64 / 2];
-    
+    else if (pal_color_count ==    16) ushort stuff[  34 / 2];
 } palette[texture[0].palette_pos_offset ? 1 : 0] <open=true, optimize=false>;
 
 struct
