@@ -17,8 +17,8 @@ uint32 tpl_header_size;
 
 struct
 {
-    uint32 texture_desc_pos_offset;
-    uint32 palette_pos_offset;
+    uint32 texture_desc_pos_offset <format=hex>;
+    uint32      palette_pos_offset <format=hex>;
 } texture[texture_count] <open=true>;
 
 struct
@@ -39,13 +39,13 @@ struct
            layer_width;
     enum <uint32>
     {
-        FMT_I4       =  0, /* swy: Greyscale */
-        FMT_I8       =  1, /* swy: Greyscale */
-        FMT_IA4      =  2, /* swy: Greyscale + Alpha */
-        FMT_IA8      =  3, /* swy: Greyscale + Alpha */
-        FMT_RGB565   =  4, /* swy: 565 ; R5G6B5   */
-        FMT_RGBA4443 =  5, /* swy: 4443; R4G4B4A3 */
-        FMT_RGBA8888 =  6, /* swy: 8888; R8G8B8A8 */
+        FMT_I4       =  0, /* swy: Greyscale */         /*  4 bits per pixel */
+        FMT_I8       =  1, /* swy: Greyscale */         /*  8 bits per pixel */
+        FMT_IA4      =  2, /* swy: Greyscale + Alpha */ /*  8 bits per pixel */
+        FMT_IA8      =  3, /* swy: Greyscale + Alpha */ /* 16 bits per pixel */
+        FMT_RGB565   =  4, /* swy: 565 ; R5G6B5   */    /* 16 bits per pixel */
+        FMT_RGB4A3   =  5, /* swy: 4443; R4G4B4A3 */    /* 16 bits per pixel */
+        FMT_RGBA8    =  6, /* swy: 8888; R8G8B8A8 */    /* 32 bits per pixel */
         FMT_7        =  7,
         FMT_C4       =  8, /* swy:    16 Colours RGB565 */ /*  4-bit color indices */
         FMT_C8       =  9, /* swy:   256 Colours RGB565 */ /*  8-bit color indices */
@@ -71,6 +71,7 @@ struct
     ubyte pad_garbage_data_maybe;
 } texture_descriptor[texture_count] <open=true>;
 
-ubyte align_garbage_data[((FTell() + 0xf-1) & ~(0xf-1)) - FTell()];
+ubyte align_garbage_data[((FTell() + 128-1) & ~(128-1)) - FTell()];
 
-ubyte mipmap_data[8*8];
+ubyte mipmap_data[(32*96) * 2 ];
+ubyte mipmap_date[(32*32) * 2 ];
