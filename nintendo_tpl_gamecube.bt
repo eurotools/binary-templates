@@ -23,11 +23,14 @@ struct
 
 struct
 {
-    uint16 pal_table_size;
+    uint16 pal_color_count;
     uint16 zero;
     uint32 format;
     uint32 sum_size;
-    ubyte stuff[sum_size];
+    
+         if (pal_color_count == 16384) ushort stuff[2080 / 2];
+    else if (pal_color_count ==   256) ushort stuff[  64 / 2];
+    
 } palette[texture[0].palette_pos_offset ? 1 : 0] <open=true, optimize=false>;
 
 struct
@@ -36,23 +39,23 @@ struct
            layer_width;
     enum <uint32>
     {
-        FMT_I4,    /* swy: Greyscale */
-        FMT_I8,    /* swy: Greyscale */
-        FMT_IA4,   /* swy: Greyscale + Alpha */
-        FMT_IA8,   /* swy: Greyscale + Alpha */
-        FMT_RGB,   /* swy: 565 ; R5G6B5   */
-        FMT_xRGBA, /* swy: 4443; R4G4B4A3 */
-        FMT_RGBA,  /* swy: 8888; R8G8B8A8 */
-        FMT_7,
-        FMT_C4,    /* swy:    16 Colours RGB565 */ /*  4-bit color indices */
-        FMT_C8,    /* swy:   256 Colours RGB565 */ /*  8-bit color indices */
-        FMT_C14X2, /* swy: 16384 Colours RGB565 */ /* 14-bit color indices in 16-bit/2-bytes with 2 wasted bits; weird format that was unimplemented in Euroland and mapped to S3TC, D3D doesn't have a D3DFMT_P16, only D3DFMT_P8 */
-        FMT_11,
-        FMT_12,
-        FMT_13,
-        FMT_S3TC,  /* swy: S3 Texture Compression, same as DXT1 or BC1, 4x4 texel blocks, 4-bit per texel, two interpolated RGB565 colors (turning them into a palette of 3+alpha or 4 indexed colors) with optionally 1-bit cutout alpha */
-        FMT_15,
-        FMT_16,
+        FMT_I4       =  0, /* swy: Greyscale */
+        FMT_I8       =  1, /* swy: Greyscale */
+        FMT_IA4      =  2, /* swy: Greyscale + Alpha */
+        FMT_IA8      =  3, /* swy: Greyscale + Alpha */
+        FMT_RGB565   =  4, /* swy: 565 ; R5G6B5   */
+        FMT_RGBA4443 =  5, /* swy: 4443; R4G4B4A3 */
+        FMT_RGBA8888 =  6, /* swy: 8888; R8G8B8A8 */
+        FMT_7        =  7,
+        FMT_C4       =  8, /* swy:    16 Colours RGB565 */ /*  4-bit color indices */
+        FMT_C8       =  9, /* swy:   256 Colours RGB565 */ /*  8-bit color indices */
+        FMT_C14X2    = 10, /* swy: 16384 Colours RGB565 */ /* 14-bit color indices in 16-bit/2-bytes with 2 wasted bits; weird format that was unimplemented in Euroland and mapped to S3TC, D3D doesn't have a D3DFMT_P16, only D3DFMT_P8 */
+        FMT_11       = 11,
+        FMT_12       = 12,
+        FMT_13       = 13,
+        FMT_S3TC     = 14, /* swy: S3 Texture Compression, same as DXT1 or BC1, 4x4 texel blocks, 4-bit per texel, two interpolated RGB565 colors (turning them into a palette of 3+alpha or 4 indexed colors) with optionally 1-bit cutout alpha */
+        FMT_15       = 15,
+        FMT_16       = 16,
     } texel_format;
     uint32 compressed_size;
     enum <uint32>
@@ -68,6 +71,6 @@ struct
     ubyte pad_garbage_data_maybe;
 } texture_descriptor[texture_count] <open=true>;
 
-ubyte align_garbage_data[8];
+ubyte align_garbage_data[((FTell() + 0xf-1) & ~(0xf-1)) - FTell()];
 
 ubyte mipmap_data[8*8];
