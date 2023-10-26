@@ -25,7 +25,14 @@ struct
 {
     uint16 pal_color_count;
     uint16 zero;
-    uint32 format;
+    enum <uint32>
+    {
+        FMT_PAL_0      = 0, /* swy: ??? */
+        FMT_PAL_RGB565 = 1,
+        FMT_PAL_2      = 2,
+        FMT_PAL_3      = 3,
+        FMT_PAL_4      = 4,
+    } pal_color_format;
     uint32 sum_size;
     
          if (pal_color_count == 16384) ushort stuff[2080 / 2]; /* swy: ??? */
@@ -62,8 +69,8 @@ struct
     {
         coords_clamp,
         coords_repeat
-    } wrap_s, wrap_t; /* swy: when wrap is on the texture tiles in that UV space dimension, otherwise the border/edge color will appear forever */
-    uint32 texel_fmt_result;
+    } wrap_s, wrap_t; /* swy: when wrap is on the texture tiles in that UV (same as ST) space dimension, otherwise the border/edge color will appear forever */
+    uint32 unk_texel_fmt_result;
     uint32 unk_always_one_uint;
     uint32 unk_always_zero_uint;
     ubyte unk_always_zero_byte;
