@@ -27,9 +27,9 @@ struct
     uint16 zero;
     enum <uint32>
     {
-        FMT_PAL_0      = 0, /* swy: ??? */
+        FMT_PAL_IA8    = 0, /* swy: ??? */
         FMT_PAL_RGB565 = 1,
-        FMT_PAL_2      = 2,
+        FMT_PAL_RGB5A3 = 2,
         FMT_PAL_3      = 3,
         FMT_PAL_4      = 4,
     } pal_color_format;
@@ -82,7 +82,7 @@ struct
 ubyte align_garbage_data[((FTell() + 64-1) & ~(64-1)) - FTell()];
 
 
-local int i = 0; local uint w, h; local float bpp = 2;
+local int i = 0; local uint w, h; local float bpp = 2; /* swy: bytes per pixel; 1 byte = 8 bits */
 for (i = 0; i < texture_count; i++)
 {
     FSeek(texture_descriptor[i].texture_data_pos_offset);
