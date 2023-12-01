@@ -15,108 +15,123 @@ uint32 magic <format=hex>; /* swy: 00 20 AF 30 */
 uint32 texture_count;
 uint32 tpl_header_size;
 
+local uint saved_offset;
+
 struct
 {
     uint32 texture_desc_pos_offset <format=hex>; /* swy: absolute start positions of each structure, or 0 if they are missing (i.e. no palette section because it's unneeded) */
     uint32      palette_pos_offset <format=hex>;
-} texture[texture_count] <open=true>;
-
-struct
-{
-    uint16 pal_color_count;
-    uint16 zero;
-    enum <uint32>
-    {
-        FMT_PAL_IA8    = 0, /* swy: ??? */
-        FMT_PAL_RGB565 = 1,
-        FMT_PAL_RGB5A3 = 2,
-        FMT_PAL_3      = 3,
-        FMT_PAL_4      = 4,
-    } pal_color_format;
-    uint32 sum_size;
     
-         if (pal_color_count == 16384) ushort stuff[2080 / 2]; /* swy: ??? */
-    else if (pal_color_count ==   256) ushort stuff[  64 / 2];
-    else if (pal_color_count ==    16) ushort stuff[  34 / 2];
-} palette[texture[0].palette_pos_offset ? 1 : 0] <open=true, optimize=false>;
-
-struct
-{
-    uint16 layer_height,
-           layer_width;
-    enum <uint32>
+    saved_offset = FTell();
+    
+    if (palette_pos_offset)
     {
-        FMT_I4       =  0, /* swy: Greyscale */         /*  4 bits per pixel */
-        FMT_I8       =  1, /* swy: Greyscale */         /*  8 bits per pixel */
-        FMT_IA4      =  2, /* swy: Greyscale + Alpha */ /*  8 bits per pixel */
-        FMT_IA8      =  3, /* swy: Greyscale + Alpha */ /* 16 bits per pixel */
-        FMT_RGB565   =  4, /* swy: 565 ; R5G6B5   */    /* 16 bits per pixel */
-        FMT_RGB4A3   =  5, /* swy: 4443; R4G4B4A3 */    /* 16 bits per pixel */
-        FMT_RGBA8    =  6, /* swy: 8888; R8G8B8A8 */    /* 32 bits per pixel */
-        FMT_7        =  7,
-        FMT_C4       =  8, /* swy:    16 Colours RGB565 */ /*  4-bit color indices */
-        FMT_C8       =  9, /* swy:   256 Colours RGB565 */ /*  8-bit color indices */
-        FMT_C14X2    = 10, /* swy: 16384 Colours RGB565 */ /* 14-bit color indices in 16-bit/2-bytes with 2 wasted bits; weird format that was unimplemented in Euroland and mapped to S3TC, D3D doesn't have a D3DFMT_P16, only D3DFMT_P8 */
-        FMT_11       = 11,
-        FMT_12       = 12,
-        FMT_13       = 13,
-        FMT_S3TC     = 14, /* swy: S3 Texture Compression, same as DXT1 or BC1, 4x4 texel blocks, 4-bit per texel, two interpolated RGB565 colors (turning them into a palette of 3+alpha or 4 indexed colors) with optionally 1-bit cutout alpha */
-        FMT_15       = 15,
-        FMT_16       = 16,
-    } texel_format;
-    uint32 texture_data_pos_offset <format=hex>; /* swy: absolute start position in the binary file of the pixels themselves */
-    enum <uint32>
-    {
-        coords_clamp,
-        coords_repeat
-    } wrap_s, wrap_t; /* swy: when wrap is on the texture tiles in that UV (same as ST) space dimension, otherwise the border/edge color will appear forever */
-    uint32 unk_texel_fmt_result;
-    uint32 unk_always_one_uint;
-    uint32 unk_always_zero_uint;
-    ubyte unk_always_zero_byte;
-    ubyte base_lod, last_lod;
-    ubyte pad_garbage_data_maybe;
-} texture_descriptor[texture_count] <open=true>;
-
-/* swy: align the texture data to 64-byte sectors for DMA or caching reasons */
-ubyte align_garbage_data[((FTell() + 64-1) & ~(64-1)) - FTell()];
-
-
-local int i = 0; local uint w, h; local float bpp = 2; /* swy: bytes per pixel; 1 byte = 8 bits */
-for (i = 0; i < texture_count; i++)
-{
-    FSeek(texture_descriptor[i].texture_data_pos_offset);
-
-    w = texture_descriptor[i].layer_width,
-    h = texture_descriptor[i].layer_height;
-
+        FSeek(palette_pos_offset);
+    
+        struct
+        {
+            uint16 pal_color_count;
+            uint16 unk_always_zero;
+            enum <uint32>
+            {
+                FMT_PAL_IA8    = 0, /* swy: ??? */
+                FMT_PAL_RGB565 = 1,
+                FMT_PAL_RGB5A3 = 2,
+                FMT_PAL_3      = 3,
+                FMT_PAL_4      = 4,
+            } pal_color_format;
+            uint32 sum_size;
+            
+                 if (pal_color_count == 16384) ushort stuff[2080 / 2]; /* swy: ??? */
+            else if (pal_color_count ==   256) ushort stuff[  64 / 2];
+            else if (pal_color_count ==    16) ushort stuff[  34 / 2];
+        } palette[texture[0].palette_pos_offset ? 1 : 0] <open=true, optimize=false>;
+    }
+    
+    //FSeek(texture_desc_pos_offset);
+    
     struct
     {
-        switch(texture_descriptor[i].texel_format)
+        uint16 layer_height,
+               layer_width;
+        enum <uint32>
         {
-            case FMT_I4:
-            case FMT_C4:
-                bpp = 0.5;
-                break;
-            case FMT_I8:
-            case FMT_IA4:
-            case FMT_C8:
-            case FMT_S3TC:
-                bpp = 1;
-                break;
-            case FMT_RGB565:
-            case FMT_RGB4A3:
-            case FMT_C14X2:
-                bpp = 2;
-                break;
-            case FMT_RGBA8:
-                bpp = 4;
-                break;
-            default:
-                Warning("FIXME: Unhandled format\n");
-        }
-        
-        Printf("%u: %u x %u x %g\n", i, w, h, bpp);
-        ubyte mipmap_data[(w * h) * bpp];
-    } tex_data <optimize=false>;
-}
+            FMT_I4       =  0, /* swy: Greyscale */         /*  4 bits per pixel */
+            FMT_I8       =  1, /* swy: Greyscale */         /*  8 bits per pixel */
+            FMT_IA4      =  2, /* swy: Greyscale + Alpha */ /*  8 bits per pixel */
+            FMT_IA8      =  3, /* swy: Greyscale + Alpha */ /* 16 bits per pixel */
+            FMT_RGB565   =  4, /* swy: 565 ; R5G6B5   */    /* 16 bits per pixel */
+            FMT_RGB4A3   =  5, /* swy: 4443; R4G4B4A3 */    /* 16 bits per pixel */
+            FMT_RGBA8    =  6, /* swy: 8888; R8G8B8A8 */    /* 32 bits per pixel */
+            FMT_7        =  7,
+            FMT_C4       =  8, /* swy: palette,    16 colours (RGB565-only in Euroland) */ /*  4-bit color indices referencing a color table, whose actual RGB format is described in the palette */
+            FMT_C8       =  9, /* swy: palette,   256 colours (RGB565-only in Euroland) */ /*  8-bit color indices */
+            FMT_C14X2    = 10, /* swy: palette, 16384 colours (RGB565-only in Euroland) */ /* 14-bit color indices in 16-bit/2-bytes with 2 wasted bits; weird format that was unimplemented in Euroland and mapped to S3TC, D3D doesn't have a D3DFMT_P16, only D3DFMT_P8 */
+            FMT_11       = 11,
+            FMT_12       = 12,
+            FMT_13       = 13,
+            FMT_S3TC     = 14, /* swy: S3 Texture Compression, same as DXT1 or BC1, 4x4 texel blocks, 4-bit per texel, two interpolated RGB565 colors (turning them into a palette of 3+alpha or 4 indexed colors) with optionally 1-bit cutout alpha */
+            FMT_15       = 15,
+            FMT_16       = 16,
+        } texel_format;
+        uint32 texture_data_pos_offset <format=hex>; /* swy: absolute start position in the binary file of the pixels themselves */
+        enum <uint32>
+        {
+            coords_clamp,
+            coords_repeat
+        } wrap_s, wrap_t; /* swy: when wrap is on the texture tiles in that UV (same as ST) space dimension, otherwise the border/edge color will appear forever */
+        uint32 unk_texel_fmt_result;
+        uint32 unk_always_one_uint;
+        uint32 unk_always_zero_uint;
+        ubyte unk_always_zero_byte;
+        ubyte base_lod, last_lod;
+        ubyte pad_garbage_data_maybe;
+    } texture_descriptor <open=true>;
+    
+    /* swy: align the texture data to 64-byte sectors for DMA or caching reasons */
+    ubyte align_garbage_data[((FTell() + 64-1) & ~(64-1)) - FTell()];
+    
+    
+    local int i = 0; local uint w, h; local float bpp = 2; /* swy: bytes per pixel; 1 byte = 8 bits */
+    for (i = 0; i < texture_count; i++)
+    {
+        FSeek(texture_descriptor.texture_data_pos_offset);
+    
+        w = texture_descriptor.layer_width,
+        h = texture_descriptor.layer_height;
+    
+        struct
+        {
+            switch(texture_descriptor.texel_format)
+            {
+                case FMT_I4:
+                case FMT_C4:
+                    bpp = 0.5;
+                    break;
+                case FMT_I8:
+                case FMT_IA4:
+                case FMT_C8:
+                case FMT_S3TC:
+                    bpp = 1;
+                    break;
+                case FMT_RGB565:
+                case FMT_RGB4A3:
+                case FMT_C14X2:
+                    bpp = 2;
+                    break;
+                case FMT_RGBA8:
+                    bpp = 4;
+                    break;
+                default:
+                    Warning("FIXME: Unhandled format\n");
+            }
+            
+            Printf("%u: %u x %u x %g\n", i, w, h, bpp);
+            ubyte mipmap_data[(w * h) * bpp];
+        } tex_data <optimize=false>;
+    }
+    
+    /* swy: go back and jump to the the next texture array element */
+    FSeek(saved_offset);
+
+} texture[texture_count] <open=true, optimize=false, read=Str("[/] [%s] %u x %u (%i mipmaps)", EnumToString(texture_descriptor.texel_format), texture_descriptor.layer_width, texture_descriptor.layer_height, texture_descriptor.last_lod - texture_descriptor.base_lod)>;
