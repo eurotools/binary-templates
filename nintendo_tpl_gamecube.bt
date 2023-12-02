@@ -9,7 +9,7 @@
 //  ID Bytes: 00 20 AF 30
 //------------------------------------------------
 
-BigEndian();
+BigEndian(); ThemeAutoScaleColors(false); /* swy: don't wash out colors in dark mode, we want the faithful value */
 
 uint32 magic <format=hex>; /* swy: 00 20 AF 30 */
 uint32 texture_count;
@@ -136,7 +136,34 @@ struct
             
             
             if (texture_descriptor.texel_format == FMT_RGB4A3)
-                struct { union { struct { ushort flag_as_opaque: 1, r: 4, g: 4, b: 4, a: 3; } translucent; struct { ushort flag_as_opaque: 1, r: 5, g: 5, b: 5; } opaque; } texel; } mipmap_data_rgb4a3[w * h];
+                struct
+                {
+                    union
+                    {
+                        struct { ushort flag_as_opaque: 1, a: 3, r: 4, g: 4, b: 4; } transl; /* swy: when flag bit is zero it's translucent */
+                        struct { ushort flag_as_opaque: 1,       r: 5, g: 5, b: 5; } opaque; /* swy: when flag bit is one  */
+                        
+                        local uint red, green, blue, alpha;
+                        
+                        if (opaque.flag_as_opaque)
+                        {
+                            red   = (opaque.r << 3) | (opaque.r >> 2);
+                            green = (opaque.g << 3) | (opaque.g >> 2);
+                            blue  = (opaque.b << 3) | (opaque.b >> 2);
+                            alpha = 0x00;
+                        }
+                        else
+                        {
+                            red   = (transl.r << 4) | (transl.r >> 0); /* swy: repeat the four bits twice to cover/fill out the eight-bit area [1234][1234], that way 0b1111 ends up being 0b11111111 instead of 0b11110000, which is only half the brightness */
+                            green = (transl.g << 4) | (transl.g >> 0);
+                            blue  = (transl.b << 4) | (transl.b >> 0);
+                            alpha = (transl.a << 5) | (transl.a << 2) | (transl.a >> 1); /* swy: repeat the three bits a bunch of times to cover/fill out the 8 bit area so that whites are full brightness [123][123][12] */
+                        };
+                        
+                        local uint combined = ((alpha << (8*3)) | (blue << (8*2)) | (green << (8*1)) | (red << (8*0))); /* swy: encode them in the ARGB8 color format for 010 Editor */
+                        
+                    } texel <bgcolor=combined>; // | ((opaque.g << 3 | opaque.g >> 2) << (8*1)) | (opaque.r << 3 | opaque.r >> 2) << (8*0)), optimize=false>;
+                } mipmap_data_rgb4a3[w * h] <optimize=false>;
             else
                 ubyte mipmap_data[(w * h) * bpp];
             
