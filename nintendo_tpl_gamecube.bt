@@ -165,13 +165,22 @@ struct
                         
                     } texel <bgcolor=combined>; // | ((opaque.g << 3 | opaque.g >> 2) << (8*1)) | (opaque.r << 3 | opaque.r >> 2) << (8*0)), optimize=false>;
                 } mipmap_data_rgb4a3[w * h] <optimize=false>;
+                
+            else if (texture_descriptor.texel_format == FMT_S3TC)
+            {
+                struct
+                {
+                    ushort color_a, color_b; struct { uint a_0: 2, a_1: 2, a_2: 2, a_3: 2, /* swy: two RGB565 colors, 4 rows of 4 texels, each a 2-bit palette index (4 possible colors in the palette, each remixed from the 2 provided colors, if the two color field values are swapped ((ushort) color_b > (ushort) color_a) we signal that the last (index 3) palette color is fully transparent) */
+                                                           b_0: 2, b_1: 2, b_2: 2, b_3: 2,
+                                                           c_0: 2, c_1: 2, c_2: 2, c_3: 2,
+                                                           d_0: 2, d_1: 2, d_2: 2, d_3: 2; } palette_indices; 
+                } mipmap_data_s3tc[((w * h) + ((4*4) - 1)) / (4*4)] <optimize=false>; /* swy: align up in multiples of 4x4, which is the minimum block size here, even if we only want 1x1 or 2x2 */
+            }
             else
                 ubyte mipmap_data[(w * h) * bpp];
             
-            
-            
             /* swy: halve the size for the next mipmap in the pyramid */
-            w /=2; h /= 2;
+            w /= 2; h /= 2;
         } texture_data <optimize=false>;
     }
     
