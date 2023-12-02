@@ -13,7 +13,7 @@ BigEndian();
 
 uint32 magic <format=hex>; /* swy: 00 20 AF 30 */
 uint32 texture_count;
-uint32 tpl_header_size;
+uint32 tpl_header_size; /* swy: always 12, seemingly */
 
 local uint saved_offset;
 
@@ -48,7 +48,9 @@ struct
         } palette[texture[0].palette_pos_offset ? 1 : 0] <open=true, optimize=false>;
     }
     
-    //FSeek(texture_desc_pos_offset);
+    
+    Printf("[dbg] desc offset: %x; computed: %x\n", texture_desc_pos_offset, FTell() + (sizeof(texture) * texture_count));
+    FSeek(texture_desc_pos_offset);
     
     struct
     {
@@ -92,28 +94,32 @@ struct
     ubyte align_garbage_data[((FTell() + 64-1) & ~(64-1)) - FTell()];
     
     
-    local int i = 0; local uint w, h; local float bpp = 2; /* swy: bytes per pixel; 1 byte = 8 bits */
-    for (i = 0; i < texture_count; i++)
+    FSeek(texture_descriptor.texture_data_pos_offset);
+    
+    local uint mipmap_count = (texture_descriptor.last_lod - texture_descriptor.base_lod) + 1;
+    
+    local int i; local uint w, h;
+    w = texture_descriptor.layer_width,
+    h = texture_descriptor.layer_height;
+        
+    local float bpp = 2; /* swy: bytes per pixel; 1 byte = 8 bits */
+    for (i = texture_descriptor.base_lod; i <= texture_descriptor.last_lod; i++)
     {
-        FSeek(texture_descriptor.texture_data_pos_offset);
-    
-        w = texture_descriptor.layer_width,
-        h = texture_descriptor.layer_height;
-    
         struct
         {
             switch(texture_descriptor.texel_format)
             {
                 case FMT_I4:
                 case FMT_C4:
+                case FMT_S3TC:
                     bpp = 0.5;
                     break;
                 case FMT_I8:
                 case FMT_IA4:
                 case FMT_C8:
-                case FMT_S3TC:
                     bpp = 1;
                     break;
+                case FMT_IA8:
                 case FMT_RGB565:
                 case FMT_RGB4A3:
                 case FMT_C14X2:
@@ -128,10 +134,13 @@ struct
             
             Printf("%u: %u x %u x %g\n", i, w, h, bpp);
             ubyte mipmap_data[(w * h) * bpp];
+            
+            /* swy: halve the size for the next mipmap in the pyramid */
+            w /=2; h /= 2;
         } tex_data <optimize=false>;
     }
     
     /* swy: go back and jump to the the next texture array element */
     FSeek(saved_offset);
 
-} texture[texture_count] <open=true, optimize=false, read=Str("[/] [%s] %u x %u (%i mipmaps)", EnumToString(texture_descriptor.texel_format), texture_descriptor.layer_width, texture_descriptor.layer_height, texture_descriptor.last_lod - texture_descriptor.base_lod)>;
+} texture[texture_count] <open=true, optimize=false, read=Str("[/] [%s] %u x %u (%i mipmap%s)", EnumToString(texture_descriptor.texel_format), texture_descriptor.layer_width, texture_descriptor.layer_height, mipmap_count, (mipmap_count > 2) ? "s" : "")>;
