@@ -47,10 +47,11 @@ struct
             else if (pal_color_count ==    16) ushort stuff[  34 / 2];
         } palette[texture[0].palette_pos_offset ? 1 : 0] <open=true, optimize=false>;
     }
-    
-    
-    Printf("[dbg] desc offset: %x; computed: %x\n", texture_desc_pos_offset, FTell() + (sizeof(texture) * texture_count));
-    FSeek(texture_desc_pos_offset);
+    else /* swy: HACK: ignore texture_desc_pos_offset for now if texture_descriptor goes right after a palette; doesn't seem to be correct most of the time in that case, but the palette ofset always is, and this goes afterwards */
+    {
+        Printf("[dbg] desc offset: %x; computed: %x\n", texture_desc_pos_offset, FTell() + (sizeof(texture) * texture_count));
+        FSeek(texture_desc_pos_offset);
+    }
     
     struct
     {
