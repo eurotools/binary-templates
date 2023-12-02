@@ -151,7 +151,7 @@ struct
                             red   = (opaque.r << 3) | (opaque.r >> 2); /* swy: repeat the top-most three bits of the 5-bit field to fill out the less-significant part at the end of the target 8-bit color */
                             green = (opaque.g << 3) | (opaque.g >> 2); /*      i.e.  [12345][123] */
                             blue  = (opaque.b << 3) | (opaque.b >> 2);
-                            alpha = 0x00;
+                            alpha = 0xFF;
                         }
                         else
                         {
@@ -161,7 +161,7 @@ struct
                             alpha = (transl.a << 5) | (transl.a << 2) | (transl.a >> 1); /* swy: repeat the three bits a bunch of times to cover/fill out the 8 bit area so that whites are full brightness [123][123][12] */
                         };
                         
-                        local uint combined = ((alpha << (8*3)) | (blue << (8*2)) | (green << (8*1)) | (red << (8*0))); /* swy: encode them in the ARGB8 color format for 010 Editor */
+                        local uint combined = (((0xFF - alpha) << (8*3)) | (blue << (8*2)) | (green << (8*1)) | (red << (8*0))); /* swy: encode them in the ARGB8 color format for 010 Editor */
                         
                     } texel <bgcolor=combined>; // | ((opaque.g << 3 | opaque.g >> 2) << (8*1)) | (opaque.r << 3 | opaque.r >> 2) << (8*0)), optimize=false>;
                 } mipmap_data_rgb4a3[w * h] <optimize=false>;
