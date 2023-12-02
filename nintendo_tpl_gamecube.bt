@@ -133,11 +133,18 @@ struct
             }
             
             Printf("%u: %u x %u x %g\n", i, w, h, bpp);
-            ubyte mipmap_data[(w * h) * bpp];
+            
+            
+            if (texture_descriptor.texel_format == FMT_RGB4A3)
+                struct { union { struct { ushort flag_as_opaque: 1, r: 4, g: 4, b: 4, a: 3; } translucent; struct { ushort flag_as_opaque: 1, r: 5, g: 5, b: 5; } opaque; } texel; } mipmap_data_rgb4a3[w * h];
+            else
+                ubyte mipmap_data[(w * h) * bpp];
+            
+            
             
             /* swy: halve the size for the next mipmap in the pyramid */
             w /=2; h /= 2;
-        } tex_data <optimize=false>;
+        } texture_data <optimize=false>;
     }
     
     /* swy: go back and jump to the the next texture array element */
