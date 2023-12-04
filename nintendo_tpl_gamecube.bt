@@ -15,7 +15,7 @@ uint32 magic <format=hex>; /* swy: 00 20 AF 30 */
 uint32 texture_count;
 uint32 tpl_header_size; /* swy: always 12, seemingly */
 
-local uint saved_offset;
+local uint saved_offset, saved_offset_tex_data;
 
 struct
 {
@@ -92,10 +92,10 @@ struct
     } texture_descriptor <open=true>;
     
     /* swy: align the texture data to 64-byte sectors for DMA or caching reasons */
-    ubyte align_garbage_data[((FTell() + 64-1) & ~(64-1)) - FTell()];
+    ubyte align_garbage_data[((FTell() + 32-1) & ~(32-1)) - FTell()];
     
     
-    FSeek(texture_descriptor.texture_data_pos_offset);
+    // swy: bad in some Euroland-generated headers :( FSeek(texture_descriptor.texture_data_pos_offset);
     
     local uint mipmap_count = (texture_descriptor.last_lod - texture_descriptor.base_lod) + 1;
     
@@ -104,11 +104,12 @@ struct
     h = texture_descriptor.layer_height;
         
     local float bpp = 2; /* swy: bytes per pixel; 1 byte = 8 bits */
+    local uint align_to_blocks_of = 64;
     for (i = texture_descriptor.base_lod; i <= texture_descriptor.last_lod; i++)
     {
         struct
         {
-            switch(texture_descriptor.texel_format)
+            switch (texture_descriptor.texel_format)
             {
                 case FMT_I4:
                 case FMT_C4:
@@ -133,8 +134,29 @@ struct
                     Warning("FIXME: Unhandled format\n");
             }
             
+            switch (texture_descriptor.texel_format)
+            {
+                case FMT_I4:
+                case FMT_I8:
+                case FMT_IA4:
+                case FMT_IA8:
+                case FMT_C4:
+                case FMT_C8:
+                case FMT_RGB565:
+                case FMT_RGB4A3:
+                case FMT_C14X2:
+                    align_to_blocks_of = 32;
+                    break;
+                case FMT_S3TC:
+                case FMT_RGBA8:
+                    align_to_blocks_of = 64;
+                    break;
+            }
+            
+            
             Printf("%u: %u x %u x %g\n", i, w, h, bpp);
             
+            saved_offset_tex_data = FTell();
             
             if (texture_descriptor.texel_format == FMT_RGB4A3)
                 struct
@@ -178,6 +200,11 @@ struct
             }
             else
                 ubyte mipmap_data[(w * h) * bpp];
+                
+            local int data_size = (FTell() - saved_offset_tex_data);
+            local int data_remaining = (data_size + (align_to_blocks_of-1)) & ~(align_to_blocks_of-1);
+            
+            ubyte pad_data[data_remaining - data_size];
             
             /* swy: halve the size for the next mipmap in the pyramid */
             w /= 2; h /= 2;
