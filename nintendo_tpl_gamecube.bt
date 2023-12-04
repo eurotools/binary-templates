@@ -95,7 +95,8 @@ struct
     ubyte align_garbage_data[((FTell() + 32-1) & ~(32-1)) - FTell()];
     
     
-    // swy: bad in some Euroland-generated headers :( FSeek(texture_descriptor.texture_data_pos_offset);
+    // swy: HACK: FIXME: bad offset in some Euroland-generated headers :(
+//  FSeek(texture_descriptor.texture_data_pos_offset);
     
     local uint mipmap_count = (texture_descriptor.last_lod - texture_descriptor.base_lod) + 1;
     
@@ -151,6 +152,8 @@ struct
                 case FMT_RGBA8:
                     align_to_blocks_of = 64;
                     break;
+                default:
+                    Warning("FIXME: Unhandled format\n");
             }
             
             
@@ -201,14 +204,17 @@ struct
             else
                 ubyte mipmap_data[(w * h) * bpp];
                 
-            local int data_size = (FTell() - saved_offset_tex_data);
-            local int data_remaining = (data_size + (align_to_blocks_of-1)) & ~(align_to_blocks_of-1);
+            local int data_size         = (FTell() - saved_offset_tex_data);
+            local int data_size_aligned = (data_size + (align_to_blocks_of-1)) & ~(align_to_blocks_of-1);
             
-            ubyte pad_data[data_remaining - data_size];
+            ubyte pad_data[data_size_aligned - data_size];
             
             /* swy: halve the size for the next mipmap in the pyramid */
             w /= 2; h /= 2;
-        } texture_data <optimize=false>;
+            
+            /* swy: save a few useful local variables based on the changing globals inside of the struct itself */
+            local uint saved_i = i, saved_w = w, saved_h = h, saved_bpp = bpp;
+        } texture_data <optimize=false, read=Str("%u: %u x %u x %g\n", saved_i, saved_w, saved_h, saved_bpp)>;
     }
     
     /* swy: go back and jump to the the next texture array element */
