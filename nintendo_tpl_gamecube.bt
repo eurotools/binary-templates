@@ -209,11 +209,11 @@ struct
             
             ubyte pad_data[data_size_aligned - data_size];
             
-            /* swy: halve the size for the next mipmap in the pyramid */
-            w /= 2; h /= 2;
-            
             /* swy: save a few useful local variables based on the changing globals inside of the struct itself */
             local uint saved_i = i, saved_w = w, saved_h = h, saved_bpp = bpp;
+            
+            /* swy: halve the size for the next mipmap in the pyramid */
+            w /= 2; h /= 2;
         } texture_data <optimize=false, read=Str("%u: %u x %u x %g\n", saved_i, saved_w, saved_h, saved_bpp)>;
     }
     
