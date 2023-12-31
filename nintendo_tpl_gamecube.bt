@@ -11,7 +11,7 @@
 
 BigEndian(); ThemeAutoScaleColors(false); /* swy: don't wash out colors in dark mode, we want the faithful value */
 
-uint32 magic <format=hex>; /* swy: 00 20 AF 30 */
+uint32 magic <format=hex, bgcolor=cDkAqua>; /* swy: 00 20 AF 30 */
 uint32 texture_count;
 uint32 tpl_header_size; /* swy: always 12, seemingly */
 
@@ -229,7 +229,15 @@ struct
                     ubyte intensity_a : 4, intensity_b : 4;
                     local uint full_intensity = intensity_a << 4 | intensity_a;
                     local uint combined = ((full_intensity << (8*2)) | (full_intensity << (8*1)) | (full_intensity << (8*0))); /* swy: encode them in the ARGB8 color format for 010 Editor */
-                } mipmap_data_i4[(w * h) * bpp] <optimize=false, read=Str("i: %02x, i: %02x", intensity_a, intensity_b), bgcolor=combined>;
+                } mipmap_data_i4[(w * h) / 2 <= 0 ? 1 : (w * h) / 2] <optimize=false, read=Str("i: %02x, i: %02x", intensity_a, intensity_b), bgcolor=combined>;
+            }
+            else if (texture_descriptor.texel_format == FMT_RGBA8)
+            {
+                struct
+                {
+                    struct { ubyte a,                  r <bgcolor=cDkRed>; }  alpha_red[16] <optimize=false>;
+                    struct { ubyte g <bgcolor=cGreen>, b <bgcolor=cBlue>;  } green_blue[16] <optimize=false>;
+                } mipmap_data_i4[((w * h) + 15) / 16] <optimize=false>;
             }
             else
                 ubyte mipmap_data[(w * h) * bpp];
@@ -237,7 +245,8 @@ struct
             local int data_size         = (FTell() - saved_offset_tex_data);
             local int data_size_aligned = (data_size + (align_to_blocks_of-1)) & ~(align_to_blocks_of-1);
             
-            ubyte pad_data[data_size_aligned - data_size] <bgcolor=cRed>;
+            if (data_size_aligned - data_size > 0)
+                ubyte pad_data[data_size_aligned - data_size] <bgcolor=cRed>;
             
             /* swy: save a few useful local variables based on the changing globals inside of the struct itself */
             local uint saved_i = i, saved_w = w, saved_h = h; local float saved_bpp = bpp;
