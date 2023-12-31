@@ -92,7 +92,7 @@ struct
     } texture_descriptor <open=true>;
     
     /* swy: align the texture data to 64-byte sectors for DMA or caching reasons */
-    ubyte align_garbage_data[((FTell() + 32-1) & ~(32-1)) - FTell()];
+    ubyte align_garbage_data[((FTell() + 32-1) & ~(32-1)) - FTell()] <bgcolor=cRed>;
     
     
     // swy: HACK: FIXME: bad offset in some Euroland-generated headers :(
@@ -211,7 +211,25 @@ struct
                                full_intensity = intensity << 4 | intensity;
                     local uint combined = (((0xFF - full_alpha) << (8*3)) | (full_intensity << (8*2)) | (full_intensity << (8*1)) | (full_intensity << (8*0))); /* swy: encode them in the ARGB8 color format for 010 Editor */
                     
-                } mipmap_data_ia4[w * h] <optimize=false, read=Str("i: %02x / a: %02x", intensity, alpha),bgcolor=combined>;
+                } mipmap_data_ia4[w * h] <optimize=false, read=Str("i: %02x / a: %02x", intensity, alpha), bgcolor=combined>;
+            }
+            else if (texture_descriptor.texel_format == FMT_I8)
+            {
+                struct
+                {
+                    ubyte intensity;
+                    local uint full_intensity = intensity;
+                    local uint combined = ((full_intensity << (8*2)) | (full_intensity << (8*1)) | (full_intensity << (8*0))); /* swy: encode them in the ARGB8 color format for 010 Editor */
+                } mipmap_data_i8[w * h] <optimize=false, read=Str("i: %02x", intensity), bgcolor=combined>;
+            }
+            else if (texture_descriptor.texel_format == FMT_I4)
+            {
+                struct
+                {
+                    ubyte intensity_a : 4, intensity_b : 4;
+                    local uint full_intensity = intensity_a << 4 | intensity_a;
+                    local uint combined = ((full_intensity << (8*2)) | (full_intensity << (8*1)) | (full_intensity << (8*0))); /* swy: encode them in the ARGB8 color format for 010 Editor */
+                } mipmap_data_i4[(w * h) * bpp] <optimize=false, read=Str("i: %02x, i: %02x", intensity_a, intensity_b), bgcolor=combined>;
             }
             else
                 ubyte mipmap_data[(w * h) * bpp];
@@ -222,7 +240,7 @@ struct
             ubyte pad_data[data_size_aligned - data_size] <bgcolor=cRed>;
             
             /* swy: save a few useful local variables based on the changing globals inside of the struct itself */
-            local uint saved_i = i, saved_w = w, saved_h = h, saved_bpp = bpp;
+            local uint saved_i = i, saved_w = w, saved_h = h; local float saved_bpp = bpp;
             
             /* swy: halve the size for the next mipmap in the pyramid */
             w /= 2; h /= 2;
