@@ -1,0 +1,25 @@
+// DSP Header Template for 010 Editor
+
+struct DSPHeader
+{
+	BigEndian();
+    uint SampleCount;
+    uint AdpcmNibbleCount;
+    uint SampleRate;
+	ushort LoopFlag;
+	ushort Format;
+	uint LoopStartOffset;
+    uint LoopEndOffset;
+	uint CurrentAddress;
+    short DecodeCoefficients[16];
+    ushort gain;
+    ushort InitialPredictor;
+    short sampleHistory1;
+    short sampleHistory2;
+	ushort LoopContextPredictor;
+	short LoopContextPredictorHistory1;
+    short LoopContextPredictorHistory2;
+	ushort Reserved[11];
+};
+
+DSPHeader dsp [FileSize() / sizeof(struct DSPHeader)];
