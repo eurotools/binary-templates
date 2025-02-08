@@ -1,0 +1,50 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: game.dmp (Symbol map dump from EngineX titles).
+//   Authors: Ebbe
+//   Version: 2-8-2025
+//   Purpose: Parses the custom symbol dump format from EngineX GameCube game.dmp files, after Europack2 decompression.
+//  Category: Game
+// File Mask: *.dmp
+//------------------------------------------------
+
+BigEndian();
+
+typedef struct
+{
+    uint Address;
+    uint Sizes; //First byte is StrLen, rest is Size.
+    
+    local uint StrLen = Sizes >> 24;
+    local uint Size = Sizes & 0xFFFFFF;
+} SYMBOL_ENTRY <read=Str("addr: %08x, size: %06x, strlen: %d",
+                         Address, Size, StrLen), optimize=false>;
+
+//Number of symbols
+uint symbol_table_size;
+
+//Read entries
+SYMBOL_ENTRY symbol_table[symbol_table_size];
+
+//Read string entries and print out each entry in the output.
+Printf("addr     size     symbol\n");
+Printf("-------- -------- ----------------\n");
+
+local int i = 0;
+struct
+{
+    for (i = 0; i < symbol_table_size; i++)
+    {
+        struct
+        {
+            char String[symbol_table[i].StrLen + 1];
+            local uint addr = symbol_table[i].Address;
+            local uint size = symbol_table[i].Size;
+            local string readStr = Str("%08x %08x %s", addr, size, String);
+            
+            Printf(readStr);
+            Printf("\n");
+        } entry <read=readStr, optimize=false>;
+    }
+} symbols <optimize=false>;
