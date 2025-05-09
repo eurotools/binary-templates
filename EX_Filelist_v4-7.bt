@@ -1,0 +1,219 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: EngineX filelist descriptor (.bin)
+//   Authors: Ebbe (with heavy inspiration from Swyter's documentation)
+//   Version: 2025-09-05
+//   Purpose: Decode the descriptor file used in Eurocom's EngineX
+//            titles to index the data in the filelist.
+//            For use in filelist versions 4, 5, 6 and 7.
+//  Category: Game
+// File Mask: *.bin
+//------------------------------------------------
+
+// Scratch counting variables
+local int i = 0;
+local int j = 0;
+
+// Helper struct for relative pointers.
+// Absolute address is their own address + the offset they store.
+typedef struct
+{
+	// Relative offset
+	int rpOffset<format=hex>;
+	// Absolute offset
+	local uint AbsOffset<format=hex> = rpOffset == 0 ? 0 : FTell() - 4 + rpOffset;
+} RelPtr
+<read=Str("%s",
+	rpOffset == 0 ?
+		"null" :
+		Str("Rel: 0x%x, Abs: 0x%x", rpOffset, AbsOffset)
+), optimize=false>;
+
+
+
+/*
+ * If the first two bytes contain data, it likely means the file is
+ * little endian, since the version number would only be in the least
+ * significant byte.
+ */
+local uint endianTest = ReadUShort();
+(endianTest == 0) ? BigEndian() : LittleEndian();
+
+// Grab the version now for later use.
+local uint ver = ReadUInt();
+
+// Check if the template supports it.
+if (
+	(ver != 4) &&
+	(ver != 5) &&
+	(ver != 6) &&
+	(ver != 7)
+) {
+	Warning("Unsupported Filelist version: %u", ver);
+    Exit(-1);
+}
+
+
+
+// Filelist Header
+typedef struct
+{
+	uint Version;
+	uint FileSize<format=hex>;
+	uint NumFiles;
+	
+	if (ver >= 5) {
+		// 0 if files are stored loosely outside the
+		// virtual filesystem, 1 if not.
+		ushort BuildType;
+		// v4 has all the data in a single .dat file.
+		// v5+ can have multiple archives, labelled .000, .001 etc.
+		ushort NumFileLists;
+	}
+	
+	// Offset to table of file name offsets.
+	RelPtr FileNameListOffset;
+} FILELIST_HEADER
+<read=Str("Version: %d, NumFiles: %d%s", Version, NumFiles,
+	ver >= 5 ? Str(", Filelists: %d", NumFileLists+1) : ""),
+optimize=false,
+bgcolor=0xFF6060>;
+
+FILELIST_HEADER Header;
+
+//Save address for later
+local uint fileInfoStartAddr = FTell();
+
+
+
+/*
+ * We jump ahead to the filename strings to build up an
+ * array of them so we can reference it later when reading
+ * the file info elements themselves.
+ */
+
+FSeek(Header.FileNameListOffset.AbsOffset);
+RelPtr FileNameList[Header.NumFiles] <bgcolor=0x60C060>;
+
+local char currByte = 0;
+struct {
+	// Iterate through all files.
+	for (i = 0; i < Header.NumFiles; i++) {
+		// Seek to the string data.
+		FSeek(FileNameList[i].AbsOffset);
+		
+		struct {
+			local string Str = "";
+			
+			// Loop until we hit a terminator.
+			for (j = 0; true; j++) {
+				currByte = ReadByte(FTell() + j);
+				
+				/*
+				 * Version 7+ "encrypts" the text byte-for-byte using a simple cypher:
+				 * Encrypted char = Normal char - 0x16 + File index + Char index
+				 * 
+				 * We simply reverse the process here.
+				 */
+				if (ver >= 7) {
+					currByte = currByte + 0x16 - i - j;
+				}
+				
+				// Check for null terminator
+				if (currByte == 0) {
+					break;
+				}
+				
+				Str += currByte;
+			}
+			
+			char Chars[j+1];
+		} FileName <read=Str, optimize=false>;
+	}
+} FileNames
+<read=Str("Encrypted: %s", ver >= 7 ? "Yes" : "No"),
+optimize=false,
+bgcolor=0x60FF60>;
+
+
+
+// Seek back to the start of the file info table.
+FSeek(fileInfoStartAddr);
+
+typedef struct
+{
+	// Location of file in bytes.
+	uint FileLoc<format=hex>;
+	// Filelist file to reference (v5+)
+	uint FileListNum;
+} FILE_LOC_INFO
+<read=Str("Location: 0x%x, Filelist: %d", FileLoc, FileListNum),
+optimize=false>;
+
+i = 0; // To keep track of current file index.
+typedef struct
+{
+	// Grab the path string for this file.
+	local string Path = FileNames.FileName[i].Str;
+	i++;
+	
+	// Since v4 filelists use a single .dat binary file,
+	// files simply store a single offset into it here.
+	if (ver <= 4) {
+		uint FileLoc<format=hex>;
+	}
+	
+	/*
+	 * Length of the file in bytes.
+	 * 
+	 * BE AWARE: For .edb files this will only report the minimum "base" file size.
+	 * The actual file size can be found at offset 0x14 into the .edb file's header.
+	 */
+	uint Length<format=hex>;
+	uint HashCode<format=hex>;
+	// File version. Should match the version specified by the file itself, if it has one.
+	uint Version;
+	uint Flags<format=hex>;
+	
+	/*
+	 * v5+ filelists support multiple filelists, so they have an array of elements
+	 * describing their location and which filelist they're in.
+	 * 
+	 * Normally a file only has 1 location, but they can have multiple
+	 * (to optimize for disk seeking time).
+	 */
+	if (ver >= 5) {
+		uint NumFileLoc;
+		if (NumFileLoc > 0) {
+			FILE_LOC_INFO FileLocInfo[NumFileLoc];
+		}
+	}
+} FILE_INFO
+<read=Str("%s", Path),
+optimize=false>;
+
+FILE_INFO FileInfo[Header.NumFiles] <bgcolor=0xFFA0B0>;
+
+
+
+// Replicate the output by the XUtil generator in the console.
+
+for (i = 0; i<Header.NumFiles; i++) {
+	Printf("%-72s : Len %10u : Ver %4u : Hash 0x%08x : Ts 0x%08x :  Loc %s\r\n",
+	FileNames.FileName[i].Chars[0] != 0 ? FileNames.FileName[i].Str : "  *??? <missing path>",
+	FileInfo[i].Length,
+	FileInfo[i].Version,
+	FileInfo[i].HashCode,
+	FileInfo[i].Flags,
+	ver >= 5 ? // Check if referencing single .dat file or multiple .000, .001 (etc) files
+	(
+		FileInfo[i].NumFileLoc == 0 ? // Check if any file location referenced
+		"<no location>" :
+		Str("%11x:%03x",
+			FileInfo[i].FileLocInfo[0].FileLoc,    // Just pick whatever is first
+			FileInfo[i].FileLocInfo[0].FileListNum
+			)
+	) :
+	Str("%11x", FileInfo[i].FileLoc));
+}
