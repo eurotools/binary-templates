@@ -201,7 +201,7 @@ FILE_INFO FileInfo[Header.NumFiles] <bgcolor=0xFFA0B0>;
 
 for (i = 0; i<Header.NumFiles; i++) {
 	Printf("%-72s : Len %10u : Ver %4u : Hash 0x%08x : Ts 0x%08x :  Loc %s\r\n",
-	FileNames.FileName[i].Chars[0] != 0 ? FileNames.FileName[i].Str : "  *??? <missing path>",
+	FileNames.FileName[i].Str != "" ? FileNames.FileName[i].Str : "  *??? <missing path>",
 	FileInfo[i].Length,
 	FileInfo[i].Version,
 	FileInfo[i].HashCode,
