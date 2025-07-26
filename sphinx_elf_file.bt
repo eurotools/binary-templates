@@ -21,5 +21,8 @@ mfc_string path;
 ushort unk;
 uint a;
 uint w, h;
-struct { struct { ubyte b,g,r,a; }pixels[w]<optimize=false>; }rows[h]<optimize=false>;
+uint thing;
+/* swy: lines go from left-to-right, on BMP the first line is the last one and it only exports RGB without alpha,
+        on ELF these are RGBA pixels and the first line appears first, same left-to-right line order as BMP */
+struct { struct { ubyte b,g,r,a; }pixels[w]<optimize=false>; } lines[h]<optimize=false>;
 uint after;
