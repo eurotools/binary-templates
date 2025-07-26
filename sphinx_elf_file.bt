@@ -18,20 +18,59 @@ mfc_string hc;
 
 /* swy: hardcoded for some oo_bosObj.elf texture offsets, for the time being */
 FSeek(0x1ABDF6);
-struct tex_wip
+typedef struct tex_wip_t
 {
     mfc_string path;
     ushort unk;
-    uint a;
+    uint a; /* swy: some of these is probably the pixel format */
     uint w, h;
-    uint thing;
+    uint pixel_count; /* swy: w * h, it seems */
     /* swy: lines go from left-to-right, on BMP the first line is the last one and it only exports RGB without alpha,
             on ELF these are RGBA pixels and the first line appears first, same left-to-right line order as BMP */
     struct { struct { ubyte b,g,r,a; }pixels[w]<optimize=false>; } lines[h]<optimize=false>;
-    uint after;
-};
+    ushort after, b, c, d, e;
+//  ubyte more[227]; mfc_string t;
+} tex_wip <read=Str("[%s] (%u x %u pixels)", path.str, w, h)>;
 
 tex_wip iconFlag3_tga;
+
+/* swy: to export or dump images you can transplant the raw binary pixel data (from the lines variable) into
+        a new 010 Editor file, and then add this PAM image text format prefix (https://en.wikipedia.org/wiki/Netpbm#Transparency)
+        so that it can be read directly by XnViewer, GIMP, Photoshop and other software without doing any changes:
+
+```
+P7
+WIDTH 128
+HEIGHT 128
+DEPTH 4
+MAXVAL 255
+TUPLTYPE RGB_ALPHA
+ENDHDR
+<raw binary pixel data selected from the .elf goes here after the ENDHDR line ending (\n, or 0D in the hex dump)>
+```
+        [i] Don't forget to change the WIDTH and HEIGHT values to match the w and h variables in the .elf for the image.
+        
+0:0000  50 37 0D 0A 57 49 44 54 48 20 31 32 38 0D 0A 48  P7..WIDTH 128..H 
+0:0010  45 49 47 48 54 20 31 32 38 0D 0A 44 45 50 54 48  EIGHT 128..DEPTH 
+0:0020  20 34 0D 0A 4D 41 58 56 41 4C 20 32 35 35 0D 0A   4..MAXVAL 255.. 
+0:0030  54 55 50 4C 54 59 50 45 20 52 47 42 5F 41 4C 50  TUPLTYPE RGB_ALP 
+0:0040  48 41 0D 0A 45 4E 44 48 44 52 0D 6A 77 7E FF 28  HA..ENDHDR.jw~ÿ( # swy: <- look at the 0D here, 6A 77 7E FF is the first BGRA pixel
+0:0050  45 65 FF 29 45 65 FF 6A 75 7D FF FF 00 FF 00 FF  Eeÿ)Eeÿju}ÿÿ.ÿ.ÿ 
+0:0060  00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF  .ÿ.ÿ.ÿ.ÿ.ÿ.ÿ.ÿ.ÿ 
+0:0070  00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF  .ÿ.ÿ.ÿ.ÿ.ÿ.ÿ.ÿ.ÿ 
+0:0080  00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF  .ÿ.ÿ.ÿ.ÿ.ÿ.ÿ.ÿ.ÿ 
+0:0090  00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF  .ÿ.ÿ.ÿ.ÿ.ÿ.ÿ.ÿ.ÿ 
+0:00A0  00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF  .ÿ.ÿ.ÿ.ÿ.ÿ.ÿ.ÿ.ÿ 
+0:00B0  00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF 00 FF  .ÿ.ÿ.ÿ.ÿ.ÿ.ÿ.ÿ.ÿ 
+
+
+        You can then use something like this FFMPEG command to convert the .pam into a normal .png,
+        and also swizzle the raw BRGA image to RGBA in the process:
+        
+        $ ffmpeg -i IconFlag3.pam -filter:v colorchannelmixer=0:0:1:0:0:1:0:0:1:0:0 IconFlag3_test_b.png # swy: https://superuser.com/a/1600350/282093
+
+        (otherwise you'd need to swap the red and blue image channels afterwards, but this does the trick, and the inner .pam data is unmodified)
+*/
 
 FSeek(0x1BBFC7);
 tex_wip shadow_tga;
