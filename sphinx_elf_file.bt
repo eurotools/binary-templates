@@ -1,0 +1,25 @@
+//------------------------------------------------
+//--- 010 Editor v15.0.1 Binary Template
+//
+//      File: Euroland ELF
+//   Authors: Swyter
+//   Version: 2025.07.26
+//   Purpose: Open Sphinx-era Eurocom EuroLand Files
+//  Category: Games
+// File Mask: *.elf
+//  ID Bytes: 45 4C 46
+//------------------------------------------------
+
+typedef struct mfc_string_t { ubyte len; char str[len]; } mfc_string <read=Str("%s (len:%u)", str, len)>;
+char magic[3];
+ubyte ver;
+ubyte one;
+mfc_string hc;
+
+FSeek(0x1ABDF6);
+mfc_string path;
+ushort unk;
+uint a;
+uint w, h;
+struct { struct { ubyte b,g,r,a; }pixels[w]<optimize=false>; }rows[h]<optimize=false>;
+uint after;
