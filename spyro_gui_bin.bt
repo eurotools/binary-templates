@@ -1,0 +1,138 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: panel.bin / panelpal.bin / titles.bin / (others, maybe)
+//   Authors: Ebbe
+//   Version: 13/09/2025
+//   Purpose: Map out the GUI data .bin files from Spyro: A Hero's Tail
+//            (and perhaps other EngineX games).
+//            Seems compatible with all the tested versions of the format.
+//  Category: Game
+// File Mask: *.bin
+//  ID Bytes: ASCII Magic Value: 'GUIB' (regardless of endianness)
+//------------------------------------------------
+
+/*
+ * DEFINITIONS
+ */
+
+typedef uint EXHashCode <format=hex>;
+
+typedef struct
+{
+	ubyte r <format=hex>;
+	ubyte g <format=hex>;
+	ubyte b <format=hex>;
+	ubyte a <format=hex>;
+} RGBA <read=Str("#%x%x%x%x", r, g, b, a), optimize=false>;
+
+typedef struct
+{
+	float x;
+	float y;
+	float w;
+	float h;
+	RGBA Colour;
+	ushort Time;
+	ushort Flags;
+	
+	// Colouring the bytes in 010 editor with the keyframe's own colour.
+	// (Multiplying with powers of 2 instead of shifting because 010 is weird.)
+	local uint DisplayColour = (Colour.r) + (Colour.g * 0x100) + (Colour.b * 0x10000);
+} Keyframe_Data
+<read=Str("[T=%04u] x: %.2f, y: %.2f, w: %.2f, h: %.2f, Color: #%x%x%x%x",
+Time, x, y, w, h, Colour.r, Colour.g, Colour.b, Colour.a),
+optimize=false,
+bgcolor=DisplayColour>;
+
+typedef struct
+{
+	EXHashCode Hashcode;
+	ubyte Keyframes;
+	ubyte FrameRate;
+	ushort TotalTime;
+	Keyframe_Data KeyframeData[Keyframes];
+} Thread_Data <read=Str("[%x] Keyframes: %d, FrameRate: %d, TotalTime: %d",
+Hashcode, Keyframes, FrameRate, TotalTime),
+optimize=false>;
+
+typedef struct
+{
+	ubyte z;
+	byte ParentIndex;
+	ushort Flags <format=hex>;
+	ushort OutputFlags <format=hex>;
+	ushort TextFlags <format=hex>;
+	EXHashCode TextureHash;
+	EXHashCode FileHash;
+	EXHashCode TextHash;
+	EXHashCode SpriteHash;
+	EXHashCode TypeHash;
+	uint Values[2] <format=hex>;
+	float u0;
+	float u1;
+	float v0;
+	float v1;
+	uint Threads;
+	Thread_Data ThreadData[Threads] <optimize=false>;
+} Sprite_Data
+<read=Str("Parent: %d, Threads: %d, Type: %x",
+ParentIndex, Threads, TypeHash),
+optimize=false>;
+
+typedef struct
+{
+	EXHashCode Hashcode;
+	uint NumSprites;
+} Screen_Header 
+<read=Str("[%x] NumSprites: %d", Hashcode, NumSprites),
+optimize=false,
+bgcolor=0xA000FF>;
+
+typedef struct
+{
+	Screen_Header Header;
+	Sprite_Data SpriteData[Header.NumSprites] <optimize=false>;
+} Screen
+<read=Str("[%x] NumSprites: %d", Header.Hashcode, Header.NumSprites),
+optimize=false>;
+
+/*
+ * LAYOUT
+ */
+
+// Endian check using the assumption that the 2-byte version(?) value is only
+// non-zero in the least significant byte.
+ReadByte(0x4) == 0 ? BigEndian() : LittleEndian();
+
+// Magic value, always "GUIB" regardless of endianness
+char Marker[4] <bgcolor=0xFFFFFF>;
+
+if (
+	(Marker[0] != 'G') ||
+	(Marker[1] != 'U') ||
+	(Marker[2] != 'I') ||
+	(Marker[3] != 'B')
+	) {
+	Warning("Unexpected marker value \"%s\" (should read \"GUIB\" in ASCII).", Marker);
+    return "Invalid header";
+}
+
+// Seems to be a version number. 17 in retail, 16 in most earlier versions.
+ushort Version <bgcolor=0x0000FF>;
+
+if (
+	(Version != 16) &&
+	(Version != 17)
+	) {
+	Warning("This template was not tested with version %d of this format, results may vary!", Version);
+}
+
+// Number of Screen structs.
+ushort NumScreens <bgcolor=0x0000FF>;
+
+// Unknown, seems to somewhat correlate with the total file size.
+uint UNK <bgcolor=0x0000FF>;
+
+// The array of Screen structs
+Screen Screens[NumScreens] <optimize=false>;
