@@ -3,21 +3,27 @@
 //
 //      File: EurocomIMA.bt
 //   Authors: jmarti856 and Swyter
-//   Version: 1.0
-//   Purpose: See the structure of the custom-made Eurocom IMA ADPCM files.
+//   Version: 1.1
+//   Purpose: View the structure of Eurocom custom IMA ADPCM blocks.
 //  Category: Audio
-// File Mask: 
-//  ID Bytes: 
-//   History: 
+// File Mask: *.ima
+//  ID Bytes:
+//   History:
+//      1.1 - Renamed fields and identified block_id as A-Z debug/block marker.
 //------------------------------------------------
-struct encoded_block
-{
-    short valpred; byte index, unk_pad; 
-    struct sample_byte
-    { 
-        byte sample_a : 4,
-             sample_b : 4; 
-    } samples[56 / 2 /* = 28 pairs of nibbles */];
-};
 
-struct encoded_block blocks [FileSize() / sizeof(struct encoded_block)];
+typedef struct
+{
+    int16 predictor;     // Initial PCM predictor for this block
+    uint8 step_index;    // IMA ADPCM step table index
+    char block_id;      // Usually ASCII A-Z, probably debug/block marker
+
+    struct PackedSampleByte
+    {
+        uint8 high_nibble : 4;  // First ADPCM nibble decoded
+        uint8 low_nibble  : 4;  // Second ADPCM nibble decoded
+    } samples[28];              // 28 bytes = 56 ADPCM nibbles/samples
+
+} EurocomImaBlock;
+
+EurocomImaBlock blocks[FileSize() / sizeof(EurocomImaBlock)];
