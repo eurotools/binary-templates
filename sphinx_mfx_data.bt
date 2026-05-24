@@ -1,0 +1,26 @@
+//------------------------------------------------
+//--- 010 Editor v9.0.1 Binary Template
+//
+//      File: Sphinx MFX_Data.bin / Music data files
+//   Authors: Swyter / Jordi
+//   Version: 2026.05.24
+//   Purpose: Reads EuroSound music data exported from MFX_Data.h.
+//  Category: Audio
+// File Mask: mfx_data.bin, MFX_Data.bin
+//------------------------------------------------
+
+LittleEndian();
+
+typedef int32  s32;
+typedef uint32 u32;
+
+typedef struct
+{
+    u32   hashcode <format=hex>; // Matching JMP_/music hashcode from MFX_Defines.h
+    float duration;              // Music duration in seconds
+    byte  looping;               // 0 = false, 1 = true
+    s32   userValue;             // Optional user-defined value
+    byte  pad;                   // 2-byte alignment padding
+} MusicDetails;
+
+MusicDetails musicData[FileSize() / sizeof(MusicDetails)];
