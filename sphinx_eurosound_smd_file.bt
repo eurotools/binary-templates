@@ -1,28 +1,63 @@
 //------------------------------------------------
-//--- 010 Editor v12.0.1 Binary Template
+//--- 010 Editor Binary Template
 //
-//      File: Eurocom SMD (Sound Marker Data?)
-//   Authors: Swyter
-//   Version: 2022.03.26
-//   Purpose: Look-up-table created by Eurosound to precalculate the ADPCM states required for loop/jump points.
-//            You can load the listenable data in Audacity by importing as raw data and picking the following settings:
-//              * Signed 16-bit PCM, little-endia, Stereo, start offset 4, amount to import 100%, sample rate 11025Hz.
-//                This works because the first 16-bits of each state is the previously-decoded ADPCM sample, and the next
-//                16-bits are the rest and we can discard them to the other channel. 11025Hz is 44100 Hz / 4, this is
-//                because the raw WAV is 44100 Hz, when resampled the ADPCM data is 22050 Hz, and we only need states for
-//                even samples, not odd ones (the other half of each ADPCM byte, which stores two nibbles; two encoded samples).
-//                So we end up accidentally storing 1/4 of the decoded data in there and it's actually listenable.
-//  Category: Game, Audio
+//      File: SphinxEuroSoundSMDFile.bt
+//   Authors: jmarti856
+//   Version: 1.1
+//   Purpose: Parse separated EuroSound ADPCM state chunks.
+//  Category: Audio
 // File Mask: *.smd
-//  ID Bytes: 00 00 00 00
+//
+// Notes:
+// - This template is for separated SMD ADPCM state chunks.
+// - Each entry is a packed 32-bit ADPCM runtime state.
+// - The packed state is usually stored as 0xOOIIPPPP:
+//      * PPPP = previous predicted PCM value
+//      * II   = input buffer
+//      * OO   = buffer step and ADPCM index
 //------------------------------------------------
-struct state
+
+//*===============================================================================================
+//* DISPLAY HELPERS
+//*===============================================================================================
+string ReadAdpcmState(uint state)
 {
-    short  valpred; /* swy: previous decoded ADPCM sample to use as base */
+    int valpred      = state & 0xFFFF;
+    uint inputBuffer = (state >> 16) & 0xFF;
+    uint index       = (state >> 24) & 0x7F;
+    uint bufferStep  = (state >> 31) & 0x01;
 
-    ushort inputbuffer : 8 <format=hex>; /* the last encoded ADPCM byte, two samples, two nibbles */
+    if(valpred >= 0x8000)
+        valpred -= 0x10000;
 
-    ushort bufferstep  : 7 <format=hex>;
-    ushort index       : 1 <format=hex>;
+    return Str("valpred=%d, input=0x%02X, index=%u, step=%u", valpred, inputBuffer, index, bufferStep);
+}
 
-} states [FileSize() / sizeof(state)] <read=Str("%3i", valpred)>;
+//*===============================================================================================
+//* STRUCTS
+//*===============================================================================================
+LittleEndian();
+
+typedef struct
+{
+    uint State<format=hex, read=ReadAdpcmState>;
+
+} AdpcmState;
+
+//*===============================================================================================
+//* READ STATE CHUNK
+//*===============================================================================================
+if(FileSize() % 4 != 0)
+{
+    Warning("Invalid SMD size. File size is not aligned to 4 bytes.");
+    return -1;
+}
+
+local uint stateCount = FileSize() / 4;
+local uint stateIndex;
+
+for(stateIndex = 0; stateIndex < stateCount; stateIndex++)
+{
+    SetBackColor(cLtGreen);
+    AdpcmState State;
+}

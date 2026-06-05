@@ -1,84 +1,142 @@
 //------------------------------------------------
-//--- 010 Editor v11.0.1 Binary Template
+//--- 010 Editor Binary Template
 //
-//      File: SphinxStreamSounds.bt
+//      File: SphinxEuroSoundSMFFile.bt
 //   Authors: jmarti856
-//   Version: 1.0
-//   Purpose: Parse SFX Streambanks files.
+//   Version: 1.2
+//   Purpose: Parse separated EuroSound stream/music marker chunks.
 //  Category: Audio
-// File Mask: *.sfx
-//  ID Bytes: 
-//   History: 
+// File Mask: *.smf
+//
+// Notes:
+// - This template is for separated SMF marker chunks used by streams and music.
+// - The file starts directly with the marker details block.
+// - Marker offsets are kept visible, but known chunks match a sequential marker layout.
+// - Change fileIsBigEndian to 1 if this chunk was exported in big endian.
 //------------------------------------------------
- 
-//*===============================================================================================
-//* Typedefs for the sfx file
-//*===============================================================================================
-typedef char ID[4];
-typedef char Padding[2];
 
 //*===============================================================================================
-//* DEFINE STRUCTS USED IN THE SFX FILE
+//* GLOBALS
 //*===============================================================================================
-//The first parameters of the header ara always little endian
-LittleEndian(); 
+local int fileIsBigEndian = 0;
+local uint markerIndex;
+
+const uint MARKER_SIZE       = 0x20;
+const uint START_MARKER_SIZE = 0x34;
+
+//*===============================================================================================
+//* ENDIAN
+//*===============================================================================================
+if(fileIsBigEndian)
+{
+    BigEndian();
+}
+else
+{
+    LittleEndian();
+}
+
+//*===============================================================================================
+//* ENUMS
+//*===============================================================================================
+typedef enum <uint>
+{
+    MARKER_JUMP  = 0,
+    MARKER_PAUSE = 5,
+    MARKER_LOOP  = 6,
+    MARKER_GOTO  = 7,
+    MARKER_END   = 9,
+    MARKER_START = 10
+
+} MarkerType;
+
+//*===============================================================================================
+//* STRUCTS
+//*===============================================================================================
+typedef struct
+{
+    uint StartMarkerCount;
+    uint MarkerCount;
+
+    // Kept for inspection.
+    // Do not FSeek to these in this template; known chunks match a sequential layout.
+    uint StartMarkerOffset<format=hex>;
+    uint MarkerOffset<format=hex>;
+
+    uint BaseVolume;
+
+} MarkerDetails;
 
 typedef struct
 {
-	uint StartMarkerCount;
-	uint MarkerCount;
-	uint StartMarkerOffset;
-	uint MarkerOffset;
-	uint BaseVolume;
-}soundDetails;
+    int        Name;
+    uint       Position<format=hex>;
+    MarkerType Type;
 
-typedef struct
-{
-	int Name;
-	uint Position;
-	uint MarkerType;
-	uint Flags;
-	uint Extra;
-	uint LoopStart;
-	uint MarkerCount;
-	uint LoopMarkerCount;
+    uint       Flags<format=hex>;
+    uint       Extra<format=hex>;
+
+    uint       LoopStart<format=hex>;
+    uint       MarkerCount;
+    uint       LoopMarkerCount;
+
 } Marker;
 
 typedef struct
 {
-	uint Name;
-	uint Position;
-	uint MarkerType;
-	uint Flags;
-	uint Extra;
-	uint LoopStart;
-	uint MarkerCount;
-	uint LoopMarkerCount;
-	uint MarkerPosition;
-	uint IsInstant;
-	uint InstantBuffer;
-	uint StateA;
-	uint StateB;
-}StartMarker;
+    Marker EmbeddedMarker;
+
+    // This is not an audio/sample position.
+    // It usually points to the index of the equivalent marker in the following Marker table.
+    uint MarkerTableIndex;
+
+    uint IsInstant;
+    uint InstantBuffer;
+
+    // Packed ADPCM decoder state values.
+    uint StateA<format=hex>;
+    uint StateB<format=hex>;
+
+} StartMarker;
 
 //*===============================================================================================
-//* READ FILE
+//* READ MARKER CHUNK
 //*===============================================================================================
-// Define the headers
 SetBackColor(cLtRed);
-soundDetails details;
-local uint markersCount = 0;
+MarkerDetails Details;
 
-//Markers
-for (markersCount = 0; markersCount < details.StartMarkerCount; markersCount++)
+//*===============================================================================================
+//* READ START MARKERS
+//*===============================================================================================
+if(Details.StartMarkerCount > 0)
 {
-	SetBackColor(cAqua);
-	StartMarker sMarkers;
+    if(FTell() + Details.StartMarkerCount * START_MARKER_SIZE > FileSize())
+    {
+        Warning("Invalid start marker range.");
+        return -1;
+    }
+
+    for(markerIndex = 0; markerIndex < Details.StartMarkerCount; markerIndex++)
+    {
+        SetBackColor(cAqua);
+        StartMarker StartMarkerData;
+    }
 }
 
-//Start Markers
-for (markersCount = 0; markersCount < details.MarkerCount; markersCount++)
+//*===============================================================================================
+//* READ MARKERS
+//*===============================================================================================
+if(Details.MarkerCount > 0)
 {
-	SetBackColor(cLtGreen);
-	Marker markers;
+    if(FTell() + Details.MarkerCount * MARKER_SIZE > FileSize())
+    {
+        Warning("Invalid marker range.");
+        return -1;
+    }
+
+    for(markerIndex = 0; markerIndex < Details.MarkerCount; markerIndex++)
+    {
+        SetBackColor(cLtGreen);
+        Marker MarkerData;
+    }
 }

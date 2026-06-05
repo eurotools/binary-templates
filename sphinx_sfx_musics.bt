@@ -1,141 +1,253 @@
 //------------------------------------------------
-//--- 010 Editor v11.0.1 Binary Template
+//--- 010 Editor Binary Template
 //
-//      File: SphinxMusics.bt
+//      File: SphinxSFXMusics.bt
 //   Authors: jmarti856
-//   Version: 1.0
-//   Purpose: Parse SFX Music files.
+//   Version: 1.2
+//   Purpose: Parse Sphinx and the Cursed Mummy SFX music files.
 //  Category: Audio
 // File Mask: *.sfx
-//  ID Bytes: 
-//   History: 
+//  ID Bytes: 4D 55 53 58
+//
+// Notes:
+// - This template is for music files named like HCE?????.SFX.
+// - Normal soundbank files also use .SFX but have a different layout.
+// - Streambank files HC??FFFF.SFX also use .SFX but have a different layout.
+// - Music files contain marker data at FileStart1 and audio data at FileStart2.
+// - Marker offsets are kept visible, but known files match a sequential marker layout.
 //------------------------------------------------
- 
+
 //*===============================================================================================
-//* Typedefs for the sfx file
+//* GLOBALS
 //*===============================================================================================
 typedef char ID[4];
-typedef char Padding[2];
-local int sfxIsBigEndian;
+
+local int sfxIsBigEndian = 0;
+local uint markerIndex;
+local long currentAudioPos;
+
+const uint MUSIC_MARKER_SIZE       = 0x20;
+const uint MUSIC_START_MARKER_SIZE = 0x34;
+
+// The first fields of the common header are always read as little endian.
+LittleEndian();
 
 //*===============================================================================================
-//* DEFINE STRUCTS USED IN THE SFX FILE
+//* ENUMS
 //*===============================================================================================
-//The first parameters of the header ara always little endian
-LittleEndian(); 
-sfxIsBigEndian = 0;
-
-typedef struct 
+typedef enum <uint>
 {
-    ID     Magic;
-    uint   Hashcode<format=hex>;
-    uint   ConstantOffset<format=hex>;
-    uint   FileSize;
-	/*For GC*/
-	if (ReadUInt() == 0x0800)
-	{
-		LittleEndian();
-	}
-	else
-	{
-		sfxIsBigEndian = 1;
-		BigEndian();		
-	}
+    MARKER_JUMP  = 0,
+    MARKER_PAUSE = 5,
+    MARKER_LOOP  = 6,
+    MARKER_GOTO  = 7,
+    MARKER_END   = 9,
+    MARKER_START = 10
+
+} MusicMarkerType;
+
+//*===============================================================================================
+//* STRUCTS
+//*===============================================================================================
+typedef struct
+{
+    ID   Magic;
+    uint Hashcode<format=hex>;
+    uint ConstantOffset<format=hex>;
+    uint FileSize;
+
+    // FileStart1 is located immediately after this.
+    // If it reads as 0x800 in little endian, the rest of the file is little endian.
+    // Otherwise, it is normally big endian, e.g. GameCube.
+    if(ReadUInt(FTell()) == 0x00000800)
+    {
+        sfxIsBigEndian = 0;
+        LittleEndian();
+    }
+    else
+    {
+        sfxIsBigEndian = 1;
+        BigEndian();
+    }
+
 } CommonHeader;
 
 typedef struct
 {
-	uint	FileStart1<format=hex>;
-	uint 	FileStart1Length;
-	uint 	FileStart2<format=hex>;
-	uint	FileStart2Length;
-	uint	FileStart3<format=hex>;
-	uint	FileStart3Length;
-} MusicBanksHeader;
+    uint FileStart1<format=hex>;
+    uint FileStart1Length;
+
+    uint FileStart2<format=hex>;
+    uint FileStart2Length;
+
+    uint FileStart3<format=hex>;
+    uint FileStart3Length;
+
+} MusicBankHeader;
 
 typedef struct
 {
-	uint StartMarkerCount;
-	uint MarkerCount;
-	uint StartMarkerOffset;
-	uint MarkerOffset;
-	uint BaseVolume;
-}musicDetails;
+    uint StartMarkerCount;
+    uint MarkerCount;
+
+    // Kept for inspection.
+    // Do not FSeek to these in this template; known files match a sequential layout.
+    uint StartMarkerOffset<format=hex>;
+    uint MarkerOffset<format=hex>;
+
+    uint BaseVolume;
+
+} MusicDetails;
 
 typedef struct
 {
-	int Name;
-	uint Position;
-	uint MarkerType;
-	uint Flags;
-	uint Extra;
-	uint LoopStart;
-	uint MarkerCount;
-	uint LoopMarkerCount;
-} Marker;
+    int             Name;
+    uint            Position<format=hex>;
+    MusicMarkerType Type;
+
+    uint            Flags<format=hex>;
+    uint            Extra<format=hex>;
+
+    uint            LoopStart<format=hex>;
+    uint            MarkerCount;
+    uint            LoopMarkerCount;
+
+} MusicMarker;
 
 typedef struct
 {
-	uint Name;
-	uint Position;
-	uint MarkerType;
-	uint Flags;
-	uint Extra;
-	uint LoopStart;
-	uint MarkerCount;
-	uint LoopMarkerCount;
-	uint MarkerPosition;
-	uint IsInstant;
-	uint InstantBuffer;
-	uint StateA;
-	uint StateB;
-}StartMarker;
+    MusicMarker Marker;
+
+    // This is not an audio/sample position.
+    // It usually points to the index of the equivalent marker in the following MusicMarker table.
+    uint MarkerTableIndex;
+
+    uint IsInstant;
+    uint InstantBuffer;
+
+    // Packed ADPCM decoder state values.
+    uint StateA<format=hex>;
+    uint StateB<format=hex>;
+
+} MusicStartMarker;
 
 //*===============================================================================================
-//* READ FILE
+//* READ HEADER
 //*===============================================================================================
-// Define the headers
 SetBackColor(cLtPurple);
-CommonHeader header;
+CommonHeader Header;
 
-// Check for valid header
-if(header.Magic != "MUSX")
+if(Header.Magic != "MUSX")
 {
-    Warning( "File is not a valid SFX file. Template stopped." );
+    Warning("This is not a valid MUSX/SFX file.");
     return -1;
 }
 
-// Read Streambanks Header
 SetBackColor(cGreen);
-MusicBanksHeader SBHeader;
+MusicBankHeader SBHeader;
 
-//Go to FileStart1 pos
-if (FSeek(SBHeader.FileStart1) < 0)
+// Music files are named like HCE?????.SFX.
+// Internally the hashcode usually uses 0x00E00000 | id.
+if((Header.Hashcode & 0x00E00000) != 0x00E00000)
 {
-	Warning( "Error searching the SFX file start 1 position");
-	return -1;
+    Warning("This template is for HCE?????.SFX music files only.");
+    return -1;
 }
 
-local uint markersCount = 0;
+// Basic section checks.
+if(SBHeader.FileStart1 >= FileSize() ||
+   SBHeader.FileStart2 >= FileSize())
+{
+    Warning("Invalid music section offset.");
+    return -1;
+}
+
+if(SBHeader.FileStart1Length < 0x14)
+{
+    Warning("Invalid music marker section length.");
+    return -1;
+}
+
+if(SBHeader.FileStart1 + SBHeader.FileStart1Length > FileSize())
+{
+    Warning("Invalid music marker section range.");
+    return -1;
+}
+
+if(SBHeader.FileStart2Length > 0 &&
+   SBHeader.FileStart2 + SBHeader.FileStart2Length > FileSize())
+{
+    Warning("Invalid music audio section range.");
+    return -1;
+}
+
+//*===============================================================================================
+//* READ MUSIC DETAILS
+//*===============================================================================================
+if(FSeek(SBHeader.FileStart1) < 0)
+{
+    Warning("Error seeking to FileStart1 / music marker section.");
+    return -1;
+}
 
 SetBackColor(cBlue);
-musicDetails details;
+MusicDetails Details;
 
-//Markers
-for (markersCount = 0; markersCount < details.StartMarkerCount; markersCount++)
+//*===============================================================================================
+//* READ START MARKERS
+//*===============================================================================================
+if(Details.StartMarkerCount > 0)
 {
-	SetBackColor(cAqua);
-	StartMarker sMarkers;
+    if(FTell() + Details.StartMarkerCount * MUSIC_START_MARKER_SIZE > SBHeader.FileStart1 + SBHeader.FileStart1Length ||
+       FTell() + Details.StartMarkerCount * MUSIC_START_MARKER_SIZE > FileSize())
+    {
+        Warning("Invalid music start marker range.");
+        return -1;
+    }
+
+    for(markerIndex = 0; markerIndex < Details.StartMarkerCount; markerIndex++)
+    {
+        SetBackColor(cAqua);
+        MusicStartMarker StartMarker;
+    }
 }
 
-//Start Markers
-for (markersCount = 0; markersCount < details.MarkerCount; markersCount++)
+//*===============================================================================================
+//* READ MARKERS
+//*===============================================================================================
+if(Details.MarkerCount > 0)
 {
-	SetBackColor(cLtGreen);
-	Marker markers;
+    if(FTell() + Details.MarkerCount * MUSIC_MARKER_SIZE > SBHeader.FileStart1 + SBHeader.FileStart1Length ||
+       FTell() + Details.MarkerCount * MUSIC_MARKER_SIZE > FileSize())
+    {
+        Warning("Invalid music marker range.");
+        return -1;
+    }
+
+    for(markerIndex = 0; markerIndex < Details.MarkerCount; markerIndex++)
+    {
+        SetBackColor(cLtGreen);
+        MusicMarker Marker;
+    }
 }
 
-//Read Audio Data
-FSeek(SBHeader.FileStart2);
-SetBackColor(cDkRed);
-struct {byte audioData[SBHeader.FileStart2Length]; } a;
+//*===============================================================================================
+//* READ AUDIO DATA
+//*===============================================================================================
+if(SBHeader.FileStart2Length > 0)
+{
+    currentAudioPos = SBHeader.FileStart2;
+
+    if(FSeek(currentAudioPos) < 0)
+    {
+        Warning("Error seeking to music audio data.");
+        return -1;
+    }
+
+    SetBackColor(cDkRed);
+    struct
+    {
+        byte Data[SBHeader.FileStart2Length];
+
+    } AudioData;
+}

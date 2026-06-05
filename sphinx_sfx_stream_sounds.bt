@@ -1,163 +1,235 @@
 //------------------------------------------------
-//--- 010 Editor v11.0.1 Binary Template
+//--- 010 Editor Binary Template
 //
 //      File: SphinxStreamSounds.bt
 //   Authors: jmarti856
-//   Version: 1.0
-//   Purpose: Parse SFX Streambanks files.
+//   Version: 1.1
+//   Purpose: Parse Sphinx / EuroSound SFX streambank files.
 //  Category: Audio
 // File Mask: *.sfx
-//  ID Bytes: 
-//   History: 
+//  ID Bytes: 4D 55 53 58
+//   History:
+//      1.0 - Initial streambank parser.
+//      1.1 - Embedded StreamStartMarker.Marker layout, but markers are read sequentially.
 //------------------------------------------------
- 
+
 //*===============================================================================================
-//* Typedefs for the sfx file
+//* GLOBALS / BASIC TYPES
 //*===============================================================================================
 typedef char ID[4];
-typedef char Padding[2];
-local int sfxIsBigEndian;
 
-//*===============================================================================================
-//* DEFINE STRUCTS USED IN THE SFX FILE
-//*===============================================================================================
-//The first parameters of the header ara always little endian
-LittleEndian(); 
+local int sfxIsBigEndian;
+local uint totalSounds;
+local uint soundIndex;
+local uint markerIndex;
+local long currentLookupPos;
+local long currentStreamDetailsPos;
+local long currentAudioPos;
+
+// The first fields of the common header are always read as little endian.
+LittleEndian();
 sfxIsBigEndian = 0;
 
-typedef struct 
+//*===============================================================================================
+//* ENUMS
+//*===============================================================================================
+typedef enum <uint>
 {
-    ID     Magic;
-    uint   Hashcode<format=hex>;
-    uint   ConstantOffset<format=hex>;
-    uint   FileSize;
-	/*For GC*/
-	if (ReadUInt() == 0x0800)
-	{
-		LittleEndian();
-	}
-	else
-	{
-		sfxIsBigEndian = 1;
-		BigEndian();		
-	}
+    MUSIC_MARKER_JUMP  = 0,
+    MUSIC_MARKER_PAUSE = 5,
+    MUSIC_MARKER_LOOP  = 6,
+    MUSIC_MARKER_GOTO  = 7,
+    MUSIC_MARKER_END   = 9,
+    MUSIC_MARKER_START = 10
+
+} StreamMarkerType;
+
+//*===============================================================================================
+//* STRUCTURES
+//*===============================================================================================
+typedef struct
+{
+    ID   Magic;
+    uint Hashcode<format=hex>;
+    uint ConstantOffset<format=hex>;
+    uint FileSize;
+
+    // FileStart1 is located immediately after this.
+    // If it reads as 0x800 in little endian, the rest of the file is little endian.
+    // Otherwise, it is normally big endian, e.g. GameCube.
+    if(ReadUInt(FTell()) == 0x00000800)
+    {
+        sfxIsBigEndian = 0;
+        LittleEndian();
+    }
+    else
+    {
+        sfxIsBigEndian = 1;
+        BigEndian();
+    }
+
 } CommonHeader;
 
 typedef struct
 {
-	uint	FileStart1<format=hex>;
-	uint 	FileStart1Length;
-	uint 	FileStart2<format=hex>;
-	uint	FileStart2Length;
-	uint	FileStart3<format=hex>;
-	uint	FileStart3Length;
-} StreamBanksHeader;
+    uint FileStart1<format=hex>;
+    uint FileStart1Length;
+    uint FileStart2<format=hex>;
+    uint FileStart2Length;
+    uint FileStart3<format=hex>;
+    uint FileStart3Length;
+
+} StreamBankHeader;
 
 typedef struct
 {
-	uint 	posOffset<format=hex>;
-} SBLookUpTable;
+    uint PosOffset<format=hex>;
+
+} StreamLookupEntry;
 
 typedef struct
 {
-	uint MarkerSize;
-	uint AudioOffset;
-	uint AudioSize;
-	uint StartMarkerCount;
-	uint MarkerCount;
-	uint StartMarkerOffset;
-	uint MarkerOffset;
-	uint BaseVolume;
-}soundDetails;
+    uint MarkerSize;
+    uint AudioOffset<format=hex>;
+    uint AudioSize;
+
+    uint StartMarkerCount;
+    uint MarkerCount;
+
+    // These are kept for inspection, but this template intentionally does not FSeek to them.
+    // The old working layout reads StartMarker[] and Marker[] sequentially after this header.
+    uint StartMarkerOffset<format=hex>;
+    uint MarkerOffset<format=hex>;
+
+    uint BaseVolume;
+
+} StreamSoundDetails;
 
 typedef struct
 {
-	int Name;
-	uint Position;
-	uint MarkerType;
-	uint Flags;
-	uint Extra;
-	uint LoopStart;
-	uint MarkerCount;
-	uint LoopMarkerCount;
-} Marker;
+    int              Name;
+    uint             Position<format=hex>;
+    StreamMarkerType Type;
+
+    uint             Flags<format=hex>;
+    uint             Extra<format=hex>;
+
+    uint             LoopStart<format=hex>;
+    uint             MarkerCount;
+    uint             LoopMarkerCount;
+
+} StreamMarker;
 
 typedef struct
 {
-	uint Name;
-	uint Position;
-	uint MarkerType;
-	uint Flags;
-	uint Extra;
-	uint LoopStart;
-	uint MarkerCount;
-	uint LoopMarkerCount;
-	uint MarkerPosition;
-	uint IsInstant;
-	uint InstantBuffer;
-	uint StateA;
-	uint StateB;
-}StartMarker;
+    StreamMarker Marker;
+
+    // This is not an audio/sample position.
+    // It usually points to the index of the equivalent marker in the following StreamMarker table.
+    uint MarkerTableIndex;
+
+    uint IsInstant;
+    uint InstantBuffer;
+
+    // Packed ADPCM decoder state values.
+    uint StateA<format=hex>;
+    uint StateB<format=hex>;
+
+} StreamStartMarker;
 
 //*===============================================================================================
 //* READ FILE
 //*===============================================================================================
-// Define the headers
 SetBackColor(cLtPurple);
-CommonHeader header;
+CommonHeader Header;
 
-// Check for valid header
-if(header.Magic != "MUSX")
+// Check for valid header.
+if(Header.Magic != "MUSX")
 {
-    Warning( "File is not a valid SFX file. Template stopped." );
+    Warning("File is not a valid SFX/MUSX file. Template stopped.");
     return -1;
 }
 
-// Read Streambanks Header
+//*===============================================================================================
+//* READ STREAMBANK HEADER
+//*===============================================================================================
 SetBackColor(cGreen);
-StreamBanksHeader SBHeader;
+StreamBankHeader SBHeader;
 
-//Go to FileStart1 pos
-if (FSeek(SBHeader.FileStart1) < 0)
+//*===============================================================================================
+//* GO TO LOOKUP TABLE
+//*===============================================================================================
+if(FSeek(SBHeader.FileStart1) < 0)
 {
-	Warning( "Error searching the SFX file start 1 position");
-	return -1;
+    Warning("Error seeking to FileStart1 / stream lookup table.");
+    return -1;
 }
 
-local uint totalSounds = SBHeader.FileStart1Length / 4;
-local uint index = 0;
-local uint markersCount = 0;
-local long currentPos = 0;
-for (index = 0; index < totalSounds; index++)
+totalSounds = SBHeader.FileStart1Length / 4;
+
+//*===============================================================================================
+//* READ STREAMS
+//*===============================================================================================
+for(soundIndex = 0; soundIndex < totalSounds; soundIndex++)
 {
-	SetBackColor(cBlue);
-	SBLookUpTable offsets;
-	currentPos = FTell();
-	
-	//Sound details (Go to FileStart2)
-	FSeek(offsets.posOffset + SBHeader.FileStart2);
-	SetBackColor(cLtRed);
-	soundDetails details;
-	
-	//Markers
-	for (markersCount = 0; markersCount < details.StartMarkerCount; markersCount++)
-	{
-		SetBackColor(cAqua);
-		StartMarker sMarkers;
-	}
-	
-	//Start Markers
-	for (markersCount = 0; markersCount < details.MarkerCount; markersCount++)
-	{
-		SetBackColor(cLtGreen);
-		Marker markers;
-	}
-	
-	//Read Audio Data
-	FSeek(details.AudioOffset + SBHeader.FileStart2);
-	SetBackColor(cDkRed);
-	struct {byte audioData[details.AudioSize]; } a;
-	
-	//Return to prev position (FileStart1)
-	FSeek(currentPos);
+    SetBackColor(cBlue);
+    StreamLookupEntry LookupEntry;
+
+    currentLookupPos = FTell();
+
+    //*===========================================================================================
+    //* READ STREAM SOUND DETAILS
+    //*===========================================================================================
+    currentStreamDetailsPos = SBHeader.FileStart2 + LookupEntry.PosOffset;
+
+    if(FSeek(currentStreamDetailsPos) < 0)
+    {
+        Warning("Error seeking to stream sound details.");
+        return -1;
+    }
+
+    SetBackColor(cLtRed);
+    StreamSoundDetails Details;
+
+    for(markerIndex = 0; markerIndex < Details.StartMarkerCount; markerIndex++)
+    {
+        SetBackColor(cAqua);
+        StreamStartMarker StartMarker;
+    }
+
+    //*===========================================================================================
+    //* READ MARKERS
+    //*===========================================================================================
+    for(markerIndex = 0; markerIndex < Details.MarkerCount; markerIndex++)
+    {
+        SetBackColor(cLtGreen);
+        StreamMarker Marker;
+    }
+
+    //*===========================================================================================
+    //* READ AUDIO DATA
+    //*===========================================================================================
+    currentAudioPos = SBHeader.FileStart2 + Details.AudioOffset;
+
+    if(FSeek(currentAudioPos) < 0)
+    {
+        Warning("Error seeking to stream audio data.");
+        return -1;
+    }
+
+    SetBackColor(cDkRed);
+    struct
+    {
+        byte AudioData[Details.AudioSize];
+
+    } Audio;
+
+    //*===========================================================================================
+    //* RETURN TO LOOKUP TABLE
+    //*===========================================================================================
+    if(FSeek(currentLookupPos) < 0)
+    {
+        Warning("Error returning to stream lookup table.");
+        return -1;
+    }
 }

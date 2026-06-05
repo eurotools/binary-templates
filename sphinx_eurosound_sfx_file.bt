@@ -1,83 +1,184 @@
 //------------------------------------------------
-//--- 010 Editor v11.0.1 Binary Template
+//--- 010 Editor Binary Template
 //
-//      File: SphinxMusics.bt
+//      File: SphinxEuroSoundSFXFile.bt
 //   Authors: jmarti856
-//   Version: 1.0
-//   Purpose: Parse Temporal SFX files.
+//   Version: 1.1
+//   Purpose: Parse separated EuroSound SFX parameter chunks.
 //  Category: Audio
 // File Mask: *.sfx
-//  ID Bytes: 
-//   History: 
+//
+// Notes:
+// - This template is for separated SFX parameter chunks, not final MUSX soundbank files.
+// - The file starts directly with the SFX count and SFX lookup table.
+// - SFX parameter Flags are always little endian.
+// - Change fileIsBigEndian to 1 if this chunk was exported in big endian.
 //------------------------------------------------
-//*===============================================================================================
-//* Typedefs for the sfx file
-//*===============================================================================================
-typedef char Padding[2];
 
 //*===============================================================================================
-//* DEFINE STRUCTS USED IN THE SFX FILE
+//* GLOBALS
 //*===============================================================================================
-//The first parameters of the header ara always little endian
-LittleEndian(); 
+local int fileIsBigEndian = 0;
+
+const uint SOUND_TABLE_ENTRY_SIZE = 0x08;
+const uint SAMPLE_POOL_ENTRY_SIZE = 0x0C;
+
+//*===============================================================================================
+//* DISPLAY HELPERS
+//*===============================================================================================
+string ReadSfxFlags(ushort flags)
+{
+    string result = "";
+
+    if(flags & 0x0001) result += "maxReject | ";
+    if(flags & 0x0002) result += "nextFreeOneToUse | ";
+    if(flags & 0x0004) result += "ignoreAge | ";
+    if(flags & 0x0008) result += "multiSample | ";
+    if(flags & 0x0010) result += "randomPick | ";
+    if(flags & 0x0020) result += "shuffled | ";
+    if(flags & 0x0040) result += "loop | ";
+    if(flags & 0x0080) result += "polyphonic | ";
+    if(flags & 0x0100) result += "underWater | ";
+    if(flags & 0x0200) result += "pauseInNis | ";
+    if(flags & 0x0400) result += "hasSubSfx | ";
+    if(flags & 0x0800) result += "stealOnLouder | ";
+    if(flags & 0x1000) result += "treatLikeMusic | ";
+
+    if(result == "")
+        return "none";
+
+    return result;
+}
+
+//*===============================================================================================
+//* ENUMS
+//*===============================================================================================
+enum <byte> SfxTrackingType
+{
+    SFX_TRACKING_2D             = 0,
+    SFX_TRACKING_AMBIENT        = 1,
+    SFX_TRACKING_3D             = 2,
+    SFX_TRACKING_3D_RANDOM_POS  = 3,
+    SFX_TRACKING_2D_PL2         = 4
+};
+
+//*===============================================================================================
+//* STRUCTS
+//*===============================================================================================
+if(fileIsBigEndian)
+    BigEndian();
+else
+    LittleEndian();
 
 typedef struct
 {
-	uint	HashCode<format=hex>;
-	uint 	Location<format=hex>;
-} SoundsArray;
+    uint HashCode<format=hex>;
+    uint Location<format=hex>;
+
+} SoundTableEntry;
 
 typedef struct
 {
-	short 	DuckerLength;
-	short 	MinDelay;
-	short 	MaxDelay;
-	short 	InnerRadiusReal;
-	short 	OuterRadiusReal;
-	byte	ReverbSend;
-	byte 	TrackingType;
-	byte	MaxVoices;
-	byte	Priority;
-	byte	Ducker;
-	byte 	MasterVolume;
-	ushort	Flags;
-	short	SamplesCount;
-} Sounds;
+    short DuckerLength;
+    short MinDelay;
+    short MaxDelay;
 
-typedef	struct
+    short InnerRadiusReal;
+    short OuterRadiusReal;
+
+    byte ReverbSend;
+    SfxTrackingType TrackingType;
+
+    byte MaxVoices;
+    byte Priority;
+    byte Ducker;
+    byte MasterVolume;
+
+    // Always little endian.
+    if(fileIsBigEndian)
+        LittleEndian();
+
+    ushort Flags<format=hex, read=ReadSfxFlags>;
+
+    if(fileIsBigEndian)
+        BigEndian();
+
+    short SamplesCount;
+
+} SfxParameterEntry;
+
+typedef struct
 {
-	short FileRef;
-	short PitchOffset;
-	short RandomPitchOffset;
-	byte BaseVolume;
-	byte RandomVolumeOffset;
-	byte Pan;
-	byte RandomPan;
-	Padding SectPadding;
-} Samples;
+    short FileRef<format=hex>;
 
+    short PitchOffset;
+    short RandomPitchOffset;
 
-//Get the number of stored sounds in this section
-local int totalSounds = ReadUInt(FTell());
-FSkip(sizeof(UINT));
+    byte BaseVolume;
+    char RandomVolumeOffset;
 
-//Read SFX Array & SFX Params
-local int index = 0;
-local int indexSamples = 0;
-local long currentPos = 0;
-for (index = 0; index < totalSounds; index++)
+    byte Pan;
+    byte RandomPan;
+
+    byte Padding[2]<format=hex>;
+
+} SamplePoolElement;
+
+//*===============================================================================================
+//* READ SFX CHUNK
+//*===============================================================================================
+SetBackColor(cBlue);
+
+local uint totalSounds = ReadUInt(FTell());
+FSkip(4);
+
+if(totalSounds > ((FileSize() - 4) / SOUND_TABLE_ENTRY_SIZE))
 {
-	SetBackColor(cBlue);
-    SoundsArray StoredSound;
-	currentPos = FTell();
-	
-	FSeek(StoredSound.Location);
+    Warning("Invalid SFX count.");
+    return -1;
+}
+
+local uint soundIndex;
+local uint sampleIndex;
+local int64 returnPos;
+local int64 sfxEntryPos;
+
+for(soundIndex = 0; soundIndex < totalSounds; soundIndex++)
+{
+    SetBackColor(cBlue);
+    SoundTableEntry StoredSound;
+
+    returnPos = FTell();
+    sfxEntryPos = StoredSound.Location;
+
+    if(sfxEntryPos >= FileSize())
+    {
+        Warning("Invalid SFX parameter offset.");
+        return -1;
+    }
+
+    FSeek(sfxEntryPos);
+
     SetBackColor(cLtRed);
-	Sounds sfxParams;
-	for (indexSamples = 0; indexSamples < sfxParams.SamplesCount; indexSamples++)
-	{
+    SfxParameterEntry SfxParams;
+
+    if(SfxParams.SamplesCount < 0)
+    {
+        Warning("Invalid negative sample count.");
+        return -1;
+    }
+
+    if(FTell() + SfxParams.SamplesCount * SAMPLE_POOL_ENTRY_SIZE > FileSize())
+    {
+        Warning("Invalid sample pool range.");
+        return -1;
+    }
+
+    for(sampleIndex = 0; sampleIndex < SfxParams.SamplesCount; sampleIndex++)
+    {
         SetBackColor(cAqua);
-		Samples smpParams;
-	}
-	FSeek(currentPos);
+        SamplePoolElement SamplePool;
+    }
+
+    FSeek(returnPos);
 }

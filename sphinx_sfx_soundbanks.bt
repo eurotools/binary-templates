@@ -1,236 +1,407 @@
 //------------------------------------------------
-//--- 010 Editor v11.0.1 Binary Template
+//--- 010 Editor Binary Template
 //
 //      File: SphinxSFXSoundBanks.bt
 //   Authors: jmarti856
-//   Version: 1.0
-//   Purpose: Parse SFX soundbanks files.
+//   Version: 1.1
+//   Purpose: Parse Sphinx and the Cursed Mummy SFX soundbank files.
 //  Category: Audio
 // File Mask: *.sfx
-//  ID Bytes: 
-//   History: 
+//
+// Notes:
+// - This template is for normal soundbank files.
+// - HC00FFFF.SFX is a streambank and has a different layout.
+// - Music files also use .SFX but have a different layout.
+// - Some fields are always little endian even inside big endian banks:
+//      * SFX parameter Flags
+//      * SampleInfo Duration
 //------------------------------------------------
- 
+
 //*===============================================================================================
-//* Typedefs for the sfx file
+//* GLOBALS
 //*===============================================================================================
 typedef char ID[4];
-typedef char Padding[2];
-local int sfxIsBigEndian;
+
+local int sfxIsBigEndian = 0;
+
+const uint SOUND_TABLE_ENTRY_SIZE         = 0x08;
+const uint SAMPLE_INFO_ENTRY_SIZE         = 0x28;
+const uint SPECIAL_SAMPLE_INFO_ENTRY_SIZE = 0x60;
 
 //*===============================================================================================
-//* DEFINE STRUCTS USED IN THE SFX FILE
+//* DISPLAY HELPERS
 //*===============================================================================================
-//The first parameters of the header ara always little endian
-LittleEndian(); 
-sfxIsBigEndian = 0;
-
-typedef struct 
+string ReadSfxFlags(ushort flags)
 {
-    ID     Magic;
-    uint   Hashcode<format=hex>;
-    uint   ConstantOffset<format=hex>;
-    uint   FileSize;
-	/*For GC*/
-	if (ReadUInt() == 0x0800)
-	{
-		LittleEndian();
-	}
-	else
-	{
-		sfxIsBigEndian = 1;
-		BigEndian();		
-	}
+    string result = "";
+
+    if(flags & 0x0001) result += "maxReject | ";
+    if(flags & 0x0002) result += "nextFreeOneToUse | ";
+    if(flags & 0x0004) result += "ignoreAge | ";
+    if(flags & 0x0008) result += "multiSample | ";
+    if(flags & 0x0010) result += "randomPick | ";
+    if(flags & 0x0020) result += "shuffled | ";
+    if(flags & 0x0040) result += "loop | ";
+    if(flags & 0x0080) result += "polyphonic | ";
+    if(flags & 0x0100) result += "underWater | ";
+    if(flags & 0x0200) result += "pauseInNis | ";
+    if(flags & 0x0400) result += "hasSubSfx | ";
+    if(flags & 0x0800) result += "stealOnLouder | ";
+    if(flags & 0x1000) result += "treatLikeMusic | ";
+
+    if(result == "")
+        return "none";
+
+    return result;
+}
+
+//*===============================================================================================
+//* ENUMS
+//*===============================================================================================
+enum <byte> SfxTrackingType
+{
+    SFX_TRACKING_2D             = 0,
+    SFX_TRACKING_AMBIENT        = 1,
+    SFX_TRACKING_3D             = 2,
+    SFX_TRACKING_3D_RANDOM_POS  = 3,
+    SFX_TRACKING_2D_PL2         = 4
+};
+
+//*===============================================================================================
+//* STRUCTS
+//*===============================================================================================
+LittleEndian();
+
+typedef struct
+{
+    ID Magic;
+
+    // Detect real endian using SFXStart/FileStart1 at 0x10.
+    // If read as little endian it equals 0x800, this is a little endian file.
+    // Otherwise assume big endian.
+    if(ReadUInt(0x10) == 0x00000800)
+    {
+        sfxIsBigEndian = 0;
+        LittleEndian();
+    }
+    else
+    {
+        sfxIsBigEndian = 1;
+        BigEndian();
+    }
+
+    uint Hashcode<format=hex>;
+    uint ConstantOffset<format=hex>;
+    uint FileSize;
+
 } CommonHeader;
 
 typedef struct
 {
-	uint	SFXStart<format=hex>;
-	uint 	SFXLength;
-	uint 	SampleInfoStart<format=hex>;
-	uint	SampleInfoLength;
-	uint	SpecialSampleInfoStart<format=hex>;
-	uint	SpecialSampleInfoLength;
-	uint	SampleDataStart<format=hex>;
-	uint	SampleDataLength;
-} SoundBanksHeader;
+    uint SFXStart<format=hex>;
+    uint SFXLength<format=hex>;
+
+    uint SampleInfoStart<format=hex>;
+    uint SampleInfoLength<format=hex>;
+
+    uint SpecialSampleInfoStart<format=hex>;
+    uint SpecialSampleInfoLength<format=hex>;
+
+    uint SampleDataStart<format=hex>;
+    uint SampleDataLength<format=hex>;
+
+} SoundBankHeader;
 
 typedef struct
 {
-	uint	HashCode<format=hex>;
-	uint 	Location<format=hex>;
-} SoundsArray;
+    uint HashCode<format=hex>;
+    uint Location<format=hex>;
+
+} SoundTableEntry;
 
 typedef struct
 {
-	short 	DuckerLength;
-	short 	MinDelay;
-	short 	MaxDelay;
-	short 	InnerRadiusReal;
-	short 	OuterRadiusReal;
-	byte	ReverbSend;
-	byte 	TrackingType;
-	byte	MaxVoices;
-	byte	Priority;
-	byte	Ducker;
-	byte 	MasterVolume;
-	if (IsBigEndian() > 0 && sfxIsBigEndian == 1)
-	{
-		LittleEndian(); 
-	}
-	ushort	Flags;
-	if (IsLittleEndian() > 0 && sfxIsBigEndian == 1)
-	{
-		BigEndian();
-	}
-	short	SamplesCount;
-} Sounds;
+    short DuckerLength;
+    short MinDelay;
+    short MaxDelay;
 
-typedef	struct
-{
-	short FileRef;
-	short PitchOffset;
-	short RandomPitchOffset;
-	byte BaseVolume;
-	byte RandomVolumeOffset;
-	byte Pan;
-	byte RandomPan;
-	Padding SectPadding;
-} Samples;
+    short InnerRadiusReal;
+    short OuterRadiusReal;
+
+    byte ReverbSend;
+    SfxTrackingType TrackingType;
+
+    byte MaxVoices;
+    byte Priority;
+    byte Ducker;
+    byte MasterVolume;
+
+    // Always little endian, even inside big endian banks.
+    if(sfxIsBigEndian)
+        LittleEndian();
+
+    ushort Flags<format=hex, read=ReadSfxFlags>;
+
+    if(sfxIsBigEndian)
+        BigEndian();
+
+    short SamplesCount;
+
+} SfxParameterEntry;
 
 typedef struct
 {
-	uint 	Flags;
-	uint	Address;
-	uint 	AudioDataSize<format=hex>;
-	uint 	Frequency;
-	uint 	RealSize;
-	uint	NumChannels;
-	uint	Bits;
-	uint	PSI;
-	uint	LoopOffset;
-	if (IsBigEndian() > 0 && sfxIsBigEndian == 1)
-	{
-		LittleEndian(); 
-	}
-	uint	Duration;
-	if (IsLittleEndian() > 0 && sfxIsBigEndian == 1)
-	{
-		BigEndian();
-	}
-} SampleInfo;
+    short FileRef<format=hex>;
+
+    short PitchOffset;
+    short RandomPitchOffset;
+
+    byte BaseVolume;
+    char RandomVolumeOffset;
+
+    byte Pan;
+    byte RandomPan;
+
+    // Real sample pool entry size is 0x0C.
+    byte Padding[2]<format=hex>;
+
+} SamplePoolElement;
 
 typedef struct
 {
-	uint NumSamples;
-	uint NibblesADPCM;
-	uint SampleRate;
-	ushort LoopFlag;
-	ushort Format;
-	uint StartOffset;
-	uint EndOffset;
-	uint unk;
-	ushort DecodeCoefficients[16]<format=hex>;
-	ushort Gain;
-	ushort Predictor;
-	ushort SampleHistory;
-	ushort SampleHistory2;
-	ushort PredictorLoop;
-	ushort SampleHistoryLoop;
-	ushort SampleHistoryLoop2;
-	ushort PaddingSamples[10];
-	ushort padding;
-} SpecialSample;
+    uint Flags<format=hex>;
+
+    uint Address<format=hex>;
+    uint AudioDataSize<format=hex>;
+
+    uint Frequency;
+    uint RealSize<format=hex>;
+
+    uint NumChannels;
+    uint Bits;
+
+    uint PSI<format=hex>;
+    uint LoopOffset<format=hex>;
+
+    // Always little endian, even inside big endian banks.
+    if(sfxIsBigEndian)
+        LittleEndian();
+
+    uint Duration;
+
+    if(sfxIsBigEndian)
+        BigEndian();
+
+} SampleInfoEntry;
+
+typedef struct
+{
+    uint NumSamples;
+    uint NibblesADPCM;
+    uint SampleRate;
+
+    ushort LoopFlag;
+    ushort Format;
+
+    uint StartOffset<format=hex>;
+    uint EndOffset<format=hex>;
+    uint Unknown<format=hex>;
+
+    ushort DecodeCoefficients[16]<format=hex>;
+
+    ushort Gain;
+    ushort PredictorScale;
+    ushort SampleHistory1;
+    ushort SampleHistory2;
+
+    ushort LoopPredictorScale;
+    ushort LoopSampleHistory1;
+    ushort LoopSampleHistory2;
+
+    ushort Reserved[10]<format=hex>;
+    ushort Padding<format=hex>;
+
+} SpecialSampleInfoEntry;
 
 //*===============================================================================================
-//* READ FILE
+//* READ HEADER
 //*===============================================================================================
-// Define the headers
 SetBackColor(cLtPurple);
-CommonHeader header;
+CommonHeader Header;
 
-// Check for valid header
-if(header.Magic != "MUSX")
+if(Header.Magic != "MUSX")
 {
-    Warning( "File is not a valid SFX file. Template stopped." );
+    Warning("This is not a valid MUSX/SFX file.");
     return -1;
 }
 
-// Read Soundbanks Header
 SetBackColor(cGreen);
-SoundBanksHeader SBHeader;
+SoundBankHeader SBHeader;
 
-//Go to SFXStart pos
-if (FSeek( SBHeader.SFXStart ) < 0)
+// HC00FFFF.SFX is the special streambank.
+if(Header.Hashcode == 0x0000FFFF)
 {
-	Warning( "Error searching the SFX start position");
-	return -1;
+    Warning("HC00FFFF.SFX is the special streambank. This template only supports normal soundbanks.");
+    return -1;
 }
 
-//Get the number of stored sounds in this section
-local int totalSounds = ReadUInt(FTell());
-FSkip(sizeof(UINT));
-
-//Read SFX Array & SFX Params
-local int index = 0;
-local int indexSamples = 0;
-local long currentPos = 0;
-for (index = 0; index < totalSounds; index++)
+// Basic soundbank checks.
+if(SBHeader.SFXStart >= FileSize() ||
+   SBHeader.SampleInfoStart >= FileSize() ||
+   SBHeader.SampleDataStart >= FileSize())
 {
-	SetBackColor(cBlue);
-    SoundsArray StoredSound;
-	currentPos = FTell();
-	
-	FSeek(StoredSound.Location + SBHeader.SFXStart);
+    Warning("Invalid soundbank section offset.");
+    return -1;
+}
+
+if(SBHeader.SFXLength < 4 || SBHeader.SampleInfoLength < 4)
+{
+    Warning("Invalid section length.");
+    return -1;
+}
+
+//*===============================================================================================
+//* READ SFX SECTION
+//*===============================================================================================
+FSeek(SBHeader.SFXStart);
+
+local uint totalSounds = ReadUInt(FTell());
+FSkip(4);
+
+if(totalSounds > ((SBHeader.SFXLength - 4) / SOUND_TABLE_ENTRY_SIZE))
+{
+    Warning("Invalid SFX count. Count does not fit inside SFX section.");
+    return -1;
+}
+
+local int soundIndex;
+local int sampleIndex;
+local int64 returnPos;
+local int64 sfxEntryPos;
+
+for(soundIndex = 0; soundIndex < totalSounds; soundIndex++)
+{
+    SetBackColor(cBlue);
+    SoundTableEntry StoredSound;
+
+    returnPos = FTell();
+    sfxEntryPos = SBHeader.SFXStart + StoredSound.Location;
+
+    if(sfxEntryPos >= FileSize())
+    {
+        Warning("Invalid SFX parameter offset.");
+        return -1;
+    }
+
+    FSeek(sfxEntryPos);
+
     SetBackColor(cLtRed);
-	Sounds sfxParams;
-	for (indexSamples = 0; indexSamples < sfxParams.SamplesCount; indexSamples++)
-	{
+    SfxParameterEntry SfxParams;
+
+    if(SfxParams.SamplesCount < 0)
+    {
+        Warning("Invalid negative sample count in SFX parameter entry.");
+        return -1;
+    }
+
+    for(sampleIndex = 0; sampleIndex < SfxParams.SamplesCount; sampleIndex++)
+    {
         SetBackColor(cAqua);
-		Samples smpParams;
-	}
-	FSeek(currentPos);
+        SamplePoolElement SamplePool;
+    }
+
+    FSeek(returnPos);
 }
 
-//Read Sample Info Section
-if (FSeek( SBHeader.SampleInfoStart ) < 0)
+//*===============================================================================================
+//* READ SAMPLE INFO SECTION
+//*===============================================================================================
+FSeek(SBHeader.SampleInfoStart);
+
+local uint totalSamples = ReadUInt(FTell());
+FSkip(4);
+
+if(totalSamples > ((SBHeader.SampleInfoLength - 4) / SAMPLE_INFO_ENTRY_SIZE))
 {
-	Warning( "Error searching the sample info start position");
-	return -1;
+    Warning("Invalid SampleInfo count. Count does not fit inside SampleInfo section.");
+    return -1;
 }
 
-//Get the number of stored samples in this section
-local int totalSamples = ReadUInt(FTell());
-FSkip(sizeof(UINT));
+local int64 sampleInfoReturnPos;
+local int64 audioDataPos;
+local uint audioRealSize;
+local uint audioPaddingSize;
 
-//Read samples params
-index = 0;
-for (index = 0; index < totalSamples; index++)
+for(sampleIndex = 0; sampleIndex < totalSamples; sampleIndex++)
 {
-	SetBackColor(cLtGreen);
-    SampleInfo sampleInfoParams;
-	currentPos = FTell();
-	
-	FSeek(sampleInfoParams.Address + SBHeader.SampleDataStart);
-	SetBackColor(cDkRed);
-	struct {byte audioData[sampleInfoParams.AudioDataSize]; } a;
-	FSeek(currentPos);
+    SetBackColor(cLtGreen);
+    SampleInfoEntry SampleInfo;
+
+    sampleInfoReturnPos = FTell();
+
+    if(SampleInfo.AudioDataSize > 0)
+    {
+        audioDataPos = SBHeader.SampleDataStart + SampleInfo.Address;
+
+        if(audioDataPos >= FileSize() || audioDataPos + SampleInfo.AudioDataSize > FileSize())
+        {
+            Warning("Invalid sample audio data range.");
+            return -1;
+        }
+
+        audioRealSize = SampleInfo.RealSize;
+
+        if(audioRealSize > SampleInfo.AudioDataSize)
+            audioRealSize = SampleInfo.AudioDataSize;
+
+        audioPaddingSize = SampleInfo.AudioDataSize - audioRealSize;
+
+        FSeek(audioDataPos);
+
+        SetBackColor(cDkRed);
+        struct
+        {
+            byte Data[audioRealSize];
+
+            if(audioPaddingSize > 0)
+            {
+                SetBackColor(cGray);
+                byte Padding[audioPaddingSize];
+            }
+
+        } AudioData;
+    }
+
+    FSeek(sampleInfoReturnPos);
 }
 
-//Read Special Sample Info Section
-if (SBHeader.SampleInfoStart != SBHeader.SpecialSampleInfoStart)
+//*===============================================================================================
+//* READ SPECIAL SAMPLE INFO SECTION, GAMECUBE DSP
+//*===============================================================================================
+if(SBHeader.SpecialSampleInfoLength > 0 &&
+   SBHeader.SpecialSampleInfoStart != SBHeader.SampleInfoStart &&
+   SBHeader.SpecialSampleInfoStart != SBHeader.SampleDataStart)
 {
-	if (FSeek(SBHeader.SpecialSampleInfoStart ) < 0)
-	{
-		Warning( "Error searching the special sample info start position");
-		return -1;
-	}
-	
-	local int totalSpecialSamples = SBHeader.SpecialSampleInfoLength / sizeof(SpecialSample);
-	index = 0;
-	for (index = 0; index < totalSpecialSamples; index++)
-	{
-		SetBackColor(cLtGreen);
-		SpecialSample specialInfo;
-	}
+    if(SBHeader.SpecialSampleInfoStart >= FileSize() ||
+       SBHeader.SpecialSampleInfoStart + SBHeader.SpecialSampleInfoLength > FileSize())
+    {
+        Warning("Invalid SpecialSampleInfo section range.");
+        return -1;
+    }
+
+    if(SBHeader.SpecialSampleInfoLength % SPECIAL_SAMPLE_INFO_ENTRY_SIZE != 0)
+    {
+        Warning("SpecialSampleInfoLength is not aligned to 0x60.");
+        return -1;
+    }
+
+    FSeek(SBHeader.SpecialSampleInfoStart);
+
+    local uint totalSpecialSamples = SBHeader.SpecialSampleInfoLength / SPECIAL_SAMPLE_INFO_ENTRY_SIZE;
+
+    for(sampleIndex = 0; sampleIndex < totalSpecialSamples; sampleIndex++)
+    {
+        SetBackColor(cLtGreen);
+        SpecialSampleInfoEntry SpecialSampleInfo;
+    }
 }

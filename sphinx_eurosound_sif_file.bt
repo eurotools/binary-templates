@@ -1,49 +1,80 @@
 //------------------------------------------------
-//--- 010 Editor v11.0.1 Binary Template
+//--- 010 Editor Binary Template
 //
-//      File: SphinxMusics.bt
+//      File: SphinxEuroSoundSIFFile.bt
 //   Authors: jmarti856
-//   Version: 1.0
-//   Purpose: Parse Temporal SIF files.
+//   Version: 1.1
+//   Purpose: Parse separated EuroSound sample info chunks.
 //  Category: Audio
 // File Mask: *.sif
-//  ID Bytes: 
-//   History: 
+//
+// Notes:
+// - This template is for separated SIF sample info chunks, not final MUSX soundbank files.
+// - The file starts directly with the sample count and SampleInfo array.
+// - SampleInfo Duration is always little endian.
+// - Change fileIsBigEndian to 1 if this chunk was exported in big endian.
 //------------------------------------------------
-//*===============================================================================================
-//* Typedefs for the sfx file
-//*===============================================================================================
-typedef char Padding[2];
 
 //*===============================================================================================
-//* DEFINE STRUCTS USED IN THE SFX FILE
+//* GLOBALS
 //*===============================================================================================
-//The first parameters of the header ara always little endian
-LittleEndian(); 
+local int fileIsBigEndian = 0;
+
+const uint SAMPLE_INFO_ENTRY_SIZE = 0x28;
+
+//*===============================================================================================
+//* STRUCTS
+//*===============================================================================================
+if(fileIsBigEndian)
+    BigEndian();
+else
+    LittleEndian();
 
 typedef struct
 {
-	uint 	Flags;
-	uint	Address<format=hex>;
-	uint 	AudioDataSize<format=hex>;
-	uint 	Frequency;
-	uint 	RealSize<format=hex>;
-	uint	NumChannels;
-	uint	Bits;
-	uint	PSI;
-	uint	LoopOffset;
-	uint	Duration;
-} SampleInfo;
+    uint Flags<format=hex>;
 
+    uint Address<format=hex>;
+    uint AudioDataSize<format=hex>;
 
-//Get the number of stored samples in this section
-local int totalSamples = ReadUInt(FTell());
-FSkip(sizeof(UINT));
+    uint Frequency;
+    uint RealSize<format=hex>;
 
-//Read samples params
-local int index = 0;
-for (index = 0; index < totalSamples; index++)
+    uint NumChannels;
+    uint Bits;
+
+    uint PSI<format=hex>;
+    uint LoopOffset<format=hex>;
+
+    // Always little endian.
+    if(fileIsBigEndian)
+        LittleEndian();
+
+    uint Duration;
+
+    if(fileIsBigEndian)
+        BigEndian();
+
+} SampleInfoEntry;
+
+//*===============================================================================================
+//* READ SAMPLE INFO CHUNK
+//*===============================================================================================
+SetBackColor(cLtGreen);
+
+local uint totalSamples = ReadUInt(FTell());
+FSkip(4);
+
+if(totalSamples > ((FileSize() - 4) / SAMPLE_INFO_ENTRY_SIZE))
 {
-	SetBackColor(cLtGreen);
-    SampleInfo sampleInfoParams;
+    Warning("Invalid SampleInfo count.");
+    return -1;
+}
+
+local uint sampleIndex;
+
+for(sampleIndex = 0; sampleIndex < totalSamples; sampleIndex++)
+{
+    SetBackColor(cLtGreen);
+    SampleInfoEntry SampleInfo;
 }
