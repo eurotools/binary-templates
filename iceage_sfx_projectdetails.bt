@@ -1,0 +1,610 @@
+//------------------------------------------------
+//--- 010 Editor Binary Template
+//
+//      File: iceage_musx6_projectdetails.bt
+//   Purpose: Parse EuroSound MUSX 6 ProjectDetails files.
+// File Mask: *_*.sfx
+//  ID Bytes: 4D 55 53 58
+//------------------------------------------------
+
+LittleEndian();
+
+//------------------------------------------------
+// Constants
+//------------------------------------------------
+
+#define MAX_MEMORY_MAPS  8
+#define MAX_MEMORY_SLOTS 8
+
+//------------------------------------------------
+// Helper functions
+//------------------------------------------------
+
+string ReadFourCCAt(int64 position)
+{
+    return ReadString(position, 4);
+}
+
+uint ReadChunkSizeAt(int64 position)
+{
+    return ReadUInt(position + 4);
+}
+
+int64 GetAlignedChunkEnd(int64 chunkStart)
+{
+    local uint chunkSize;
+    local int64 chunkEnd;
+
+    chunkSize = ReadChunkSizeAt(chunkStart);
+    chunkEnd = chunkStart + 8 + chunkSize;
+
+    // IFF/FORM chunks are normally aligned to 2 bytes.
+    if ((chunkSize & 1) != 0)
+        chunkEnd++;
+
+    return chunkEnd;
+}
+
+// Count consecutive NAME + SLOT definitions.
+int CountMemoryMaps(int64 startPosition, int64 endPosition)
+{
+    local int count;
+    local int64 position;
+    local int64 nameEnd;
+    local int64 slotEnd;
+
+    count = 0;
+    position = startPosition;
+
+    while (position + 8 <= endPosition)
+    {
+        if (ReadFourCCAt(position) != "NAME")
+            break;
+
+        nameEnd = GetAlignedChunkEnd(position);
+
+        if (nameEnd + 8 > endPosition)
+            break;
+
+        if (ReadFourCCAt(nameEnd) != "SLOT")
+            break;
+
+        slotEnd = GetAlignedChunkEnd(nameEnd);
+
+        if (slotEnd > endPosition)
+            break;
+
+        count++;
+        position = slotEnd;
+    }
+
+    return count;
+}
+
+//------------------------------------------------
+// MUSX header - exactly 32 bytes
+//------------------------------------------------
+
+typedef struct
+{
+    char Magic[4];
+
+    uint Hashcode <format=hex>;
+    uint FileVersion;
+    uint FileSize <format=hex>;
+
+    char Platform[4];
+
+    uint TimeStamp;
+    uint CodecFlag;
+    uint Padding;
+
+} MusxHeader
+<
+    read=Str(
+        "MUSX hc=%#010x platform=%c%c%c%c version=%u size=%#x",
+        Hashcode,
+        Platform[0],
+        Platform[1],
+        Platform[2],
+        Platform[3],
+        FileVersion,
+        FileSize
+    )
+>;
+
+//------------------------------------------------
+// Payload descriptor
+//------------------------------------------------
+
+typedef struct
+{
+    uint Offset <format=hex>;
+    uint Size <format=hex>;
+
+} MusxEntry
+<
+    read=Str(
+        "offset=%#x size=%#x",
+        Offset,
+        Size
+    )
+>;
+
+//------------------------------------------------
+// Generic FORM header
+//
+// FORM
+// uint Size
+// char FormType[4]
+// child data...
+//
+// Size includes FormType and all child chunks.
+// Size does not include "FORM" or the Size field.
+//------------------------------------------------
+
+typedef struct
+{
+    char Id[4];
+    uint Size <format=hex>;
+    char FormType[4];
+
+} FormHeader
+<
+    read=Str(
+        "%c%c%c%c type=%c%c%c%c size=%#x",
+        Id[0],
+        Id[1],
+        Id[2],
+        Id[3],
+        FormType[0],
+        FormType[1],
+        FormType[2],
+        FormType[3],
+        Size
+    )
+>;
+
+//------------------------------------------------
+// SMEM
+//
+// Stores the maximum memory requirement observed for
+// the memory-map configurations.
+//
+// Examples:
+//
+// PS2:  0x0000074C
+// Xbox: 0x00001644
+//
+// The exact unit is not yet fully confirmed.
+//------------------------------------------------
+
+typedef struct
+{
+    char Id[4];
+    uint Size <format=hex>;
+
+    if (Size >= 4)
+        uint MaximumMemoryMapSize;
+
+    if (Size > 4)
+        ubyte UnknownData[Size - 4] <format=hex>;
+
+    if ((Size & 1) != 0)
+        ubyte AlignmentPadding;
+
+} SoundMemoryChunk
+<
+    read=Str(
+        "maximumMemoryMapSize=%u size=%u",
+        MaximumMemoryMapSize,
+        Size
+    )
+>;
+
+//------------------------------------------------
+// NAME
+//
+// Name of a memory map, for example:
+//
+// Default
+// Racing
+//------------------------------------------------
+
+typedef struct
+{
+    char Id[4];
+    uint Size <format=hex>;
+
+    char Text[Size];
+
+    if ((Size & 1) != 0)
+        ubyte AlignmentPadding;
+
+} MemoryMapNameChunk
+<
+    read=Str(
+        "\"%s\"",
+        Text
+    )
+>;
+
+//------------------------------------------------
+// SLOT
+//
+// Contains one value per memory slot in this memory map.
+//
+// The project format stores only the platform-dependent
+// slot values here. Runtime export later associates each
+// slot with hashcodes, heap selection and byte sizes.
+//------------------------------------------------
+
+typedef struct
+{
+    char Id[4];
+    uint Size <format=hex>;
+
+    local uint SlotCount = Size / 4;
+    local uint RemainingByteCount = Size % 4;
+
+    uint SlotSizes[SlotCount];
+
+    if (RemainingByteCount > 0)
+        ubyte UnknownData[RemainingByteCount] <format=hex>;
+
+    if ((Size & 1) != 0)
+        ubyte AlignmentPadding;
+
+} MemorySlotsChunk
+<
+    read=Str(
+        "slots=%u size=%u",
+        SlotCount,
+        Size
+    )
+>;
+
+//------------------------------------------------
+// One complete memory-map definition:
+//
+// NAME
+// SLOT
+//------------------------------------------------
+
+typedef struct
+{
+    MemoryMapNameChunk Name;
+    MemorySlotsChunk Slots;
+
+} MemoryMapDefinition
+<
+    read=Str(
+        "%s slots=%u",
+        Name.Text,
+        Slots.SlotCount
+    )
+>;
+
+//------------------------------------------------
+// USRV
+//
+// Observed size: 0x28 bytes = 10 signed integers.
+//
+// Unused entries normally contain:
+//
+// 0xFFFFFFFF = -1
+//------------------------------------------------
+
+typedef struct
+{
+    char Id[4];
+    uint Size <format=hex>;
+
+    local uint ValueCount = Size / 4;
+    local uint RemainingByteCount = Size % 4;
+
+    int UserValues[ValueCount] <format=hex>;
+
+    if (RemainingByteCount > 0)
+        ubyte UnknownData[RemainingByteCount] <format=hex>;
+
+    if ((Size & 1) != 0)
+        ubyte AlignmentPadding;
+
+} UserValuesChunk
+<
+    read=Str(
+        "values=%u size=%u",
+        ValueCount,
+        Size
+    )
+>;
+
+//------------------------------------------------
+// Generic unknown chunk
+//------------------------------------------------
+
+typedef struct
+{
+    char Id[4];
+    uint Size <format=hex>;
+
+    ubyte Data[Size] <format=hex>;
+
+    if ((Size & 1) != 0)
+        ubyte AlignmentPadding;
+
+} UnknownChunk
+<
+    read=Str(
+        "%c%c%c%c size=%u",
+        Id[0],
+        Id[1],
+        Id[2],
+        Id[3],
+        Size
+    )
+>;
+
+//------------------------------------------------
+// Main file
+//------------------------------------------------
+
+SetBackColor(cLtPurple);
+
+MusxHeader Header;
+
+if (Header.Magic != "MUSX")
+{
+    Warning("File is not a valid MUSX file. Template stopped.");
+    return -1;
+}
+
+// ProjectDetails chunks observed on PS2 and Xbox use
+// little-endian integers.
+LittleEndian();
+
+//------------------------------------------------
+// Descriptor immediately after the 32-byte header
+//------------------------------------------------
+
+FSeek(32);
+
+SetBackColor(cGreen);
+
+MusxEntry ProjectDetailsData;
+
+if (ProjectDetailsData.Size == 0)
+{
+    Warning("ProjectDetails section is empty.");
+    return -1;
+}
+
+if (ProjectDetailsData.Offset >= FileSize())
+{
+    Warning("ProjectDetails offset is outside the file.");
+    return -1;
+}
+
+local int64 ProjectDetailsStart;
+local int64 ProjectDetailsEnd;
+
+ProjectDetailsStart = ProjectDetailsData.Offset;
+ProjectDetailsEnd =
+    ProjectDetailsData.Offset +
+    ProjectDetailsData.Size;
+
+if (ProjectDetailsEnd > FileSize())
+    ProjectDetailsEnd = FileSize();
+
+//------------------------------------------------
+// Outer FORM / ES2P
+//------------------------------------------------
+
+FSeek(ProjectDetailsStart);
+
+local int64 ProjectFormStart;
+local int64 ProjectFormEnd;
+
+ProjectFormStart = FTell();
+
+SetBackColor(cBlue);
+
+FormHeader ProjectForm;
+
+if (ProjectForm.Id != "FORM")
+{
+    Warning("Expected FORM at the ProjectDetails offset.");
+    return -1;
+}
+
+if (ProjectForm.FormType != "ES2P")
+{
+    Warning("Expected ES2P as the outer FORM type.");
+}
+
+ProjectFormEnd =
+    ProjectFormStart +
+    8 +
+    ProjectForm.Size;
+
+if (ProjectFormEnd > ProjectDetailsEnd)
+    ProjectFormEnd = ProjectDetailsEnd;
+
+//------------------------------------------------
+// Nested FORM / STYP
+//------------------------------------------------
+
+if (FTell() + 12 > ProjectFormEnd)
+{
+    Warning("ES2P does not contain a complete nested FORM.");
+    return -1;
+}
+
+local int64 MemoryMapsFormStart;
+local int64 MemoryMapsFormEnd;
+
+MemoryMapsFormStart = FTell();
+
+SetBackColor(cLtBlue);
+
+FormHeader MemoryMapsForm;
+
+if (MemoryMapsForm.Id != "FORM")
+{
+    Warning("Expected a nested FORM inside ES2P.");
+    return -1;
+}
+
+if (MemoryMapsForm.FormType != "STYP")
+{
+    Warning("Expected STYP as the nested FORM type.");
+}
+
+MemoryMapsFormEnd =
+    MemoryMapsFormStart +
+    8 +
+    MemoryMapsForm.Size;
+
+if (MemoryMapsFormEnd > ProjectFormEnd)
+    MemoryMapsFormEnd = ProjectFormEnd;
+
+//------------------------------------------------
+// SMEM
+//------------------------------------------------
+
+if (FTell() + 8 > MemoryMapsFormEnd)
+{
+    Warning("STYP does not contain an SMEM chunk.");
+    return -1;
+}
+
+if (ReadFourCCAt(FTell()) != "SMEM")
+{
+    Warning("Expected SMEM as the first STYP chunk.");
+    return -1;
+}
+
+SetBackColor(cLtGreen);
+
+SoundMemoryChunk SoundMemory;
+
+//------------------------------------------------
+// Memory maps: NAME + SLOT
+//------------------------------------------------
+
+local int64 MemoryMapDefinitionsStart;
+local int MemoryMapCount;
+
+MemoryMapDefinitionsStart = FTell();
+
+MemoryMapCount =
+    CountMemoryMaps(
+        MemoryMapDefinitionsStart,
+        MemoryMapsFormEnd
+    );
+
+if (MemoryMapCount > MAX_MEMORY_MAPS)
+{
+    Warning(
+        "Project contains more than %d memory maps.",
+        MAX_MEMORY_MAPS
+    );
+}
+
+SetBackColor(cAqua);
+
+MemoryMapDefinition MemoryMaps[MemoryMapCount]
+    <optimize=false>;
+
+//------------------------------------------------
+// Any unknown data remaining inside STYP
+//------------------------------------------------
+
+if (FTell() < MemoryMapsFormEnd)
+{
+    local int64 RemainingMemoryMapBytes;
+
+    RemainingMemoryMapBytes =
+        MemoryMapsFormEnd -
+        FTell();
+
+    SetBackColor(cGray);
+
+    ubyte UnknownMemoryMapData[
+        RemainingMemoryMapBytes
+    ] <format=hex>;
+}
+else if (FTell() > MemoryMapsFormEnd)
+{
+    Warning("Memory-map definitions exceed the STYP FORM.");
+    FSeek(MemoryMapsFormEnd);
+}
+
+//------------------------------------------------
+// USRV or another outer chunk
+//------------------------------------------------
+
+if (FTell() + 8 <= ProjectFormEnd)
+{
+    local string OuterChunkType;
+
+    OuterChunkType =
+        ReadFourCCAt(FTell());
+
+    if (OuterChunkType == "USRV")
+    {
+        SetBackColor(cLtPurple);
+
+        UserValuesChunk UserValues;
+    }
+    else
+    {
+        SetBackColor(cGray);
+
+        UnknownChunk UnknownOuterChunk;
+    }
+}
+
+//------------------------------------------------
+// Remaining data inside ES2P
+//------------------------------------------------
+
+if (FTell() < ProjectFormEnd)
+{
+    local int64 RemainingProjectFormBytes;
+
+    RemainingProjectFormBytes =
+        ProjectFormEnd -
+        FTell();
+
+    SetBackColor(cGray);
+
+    ubyte UnknownProjectFormData[
+        RemainingProjectFormBytes
+    ] <format=hex>;
+}
+else if (FTell() > ProjectFormEnd)
+{
+    Warning("Parsed data exceeds the ES2P FORM.");
+    FSeek(ProjectFormEnd);
+}
+
+//------------------------------------------------
+// Remaining data in the ProjectDetails payload
+//------------------------------------------------
+
+if (FTell() < ProjectDetailsEnd)
+{
+    local int64 RemainingProjectDetailsBytes;
+
+    RemainingProjectDetailsBytes =
+        ProjectDetailsEnd -
+        FTell();
+
+    SetBackColor(cDkRed);
+
+    ubyte UnknownProjectDetailsData[
+        RemainingProjectDetailsBytes
+    ] <format=hex>;
+}

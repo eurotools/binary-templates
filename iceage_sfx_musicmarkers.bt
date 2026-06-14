@@ -1,0 +1,290 @@
+//------------------------------------------------
+//--- 010 Editor Binary Template
+//
+//      File: spyro_sfx_musicmarkers.bt
+//   Purpose: Parse EuroSound version 6
+//            __musicmarkers.sfx files.
+// File Mask: __musicmarkers*.sfx
+//  ID Bytes: 4D 55 53 58
+//------------------------------------------------
+
+LittleEndian();
+
+//------------------------------------------------
+// MUSX header
+//------------------------------------------------
+
+typedef struct
+{
+    char Magic[4];
+
+    uint Hashcode <format=hex>;
+    uint FileVersion;
+    uint FileSize <format=hex>;
+
+    char Platform[4];
+
+    uint TimeStamp;
+    uint CodecFlag;
+    uint Padding;
+} MusxHeader
+<
+    read=Str(
+        "MUSX hc=%#010x version=%u platform=%c%c%c%c size=%u",
+        Hashcode,
+        FileVersion,
+        Platform[0],
+        Platform[1],
+        Platform[2],
+        Platform[3],
+        FileSize
+    )
+>;
+
+//------------------------------------------------
+// Array information
+//------------------------------------------------
+
+typedef struct
+{
+    uint Count;
+
+    /*
+        Always zero in the currently known files.
+
+        It may be padding, a reserved value or an
+        unused offset from an older implementation.
+    */
+    uint Padding;
+} ArrayInfo
+<
+    read=Str(
+        "count=%u",
+        Count
+    )
+>;
+
+//------------------------------------------------
+// Music summary
+//
+// Corresponds conceptually to:
+//
+//     V10 MHDR:
+//         MusicHashcode
+//         BaseVolume
+//
+//     V10 STLS:
+//         StreamDataOffset
+//------------------------------------------------
+
+typedef struct
+{
+    /*
+        Matches:
+            header.Hashcode
+
+        From the corresponding _mus_*.sfx file.
+    */
+    uint MusicHashcode <format=hex>;
+
+    /*
+        Matches:
+            StreamData.Offset
+    */
+    uint StreamDataOffset <format=hex>;
+
+    /*
+        Matches:
+            MusicMarkers.BaseVolume
+    */
+    uint BaseVolume;
+
+    uint Padding;
+} MusicHeader
+<
+    read=Str(
+        "hc=%#010x streamOffset=%#x volume=%u",
+        MusicHashcode,
+        StreamDataOffset,
+        BaseVolume
+    )
+>;
+
+//------------------------------------------------
+// Marker counts
+//
+// These fields match MarkerFile from
+// spyro_sfx_musics.bt.
+//------------------------------------------------
+
+typedef struct
+{
+    /*
+        Matches:
+            MusicMarkers.StartMarkerCount
+    */
+    uint StartMarkerCount;
+
+    /*
+        Matches:
+            MusicMarkers.MarkerCount
+    */
+    uint MarkerCount;
+
+    uint Padding0;
+    uint Padding1;
+} MusicMarkerCounts
+<
+    read=Str(
+        "startMarkers=%u markers=%u",
+        StartMarkerCount,
+        MarkerCount
+    )
+>;
+
+//------------------------------------------------
+// Marker-list summary
+//
+// Corresponds conceptually to the MKLS chunk
+// used by version 10.
+//------------------------------------------------
+
+typedef struct
+{
+    /*
+        Relevant final marker position.
+
+        For looping music, this matches the Position
+        of the Loop marker.
+
+        For non-looping music, this matches the Position
+        of the End marker.
+    */
+    uint Position;
+
+    /*
+        Matches Marker.LoopStart when the music loops.
+
+        The observed value is -1 when the final marker
+        is an End marker and the music does not loop.
+    */
+    int LoopStart;
+
+    uint Padding0;
+    uint Padding1;
+} MusicMarkerListEntry
+<
+    read=Str(
+        "position=%u loopStart=%d",
+        Position,
+        LoopStart
+    )
+>;
+
+//------------------------------------------------
+// File
+//------------------------------------------------
+
+SetBackColor(cLtPurple);
+MusxHeader header;
+
+if (header.Magic != "MUSX")
+{
+    Warning("File is not a valid MUSX file. Template stopped.");
+    return -1;
+}
+
+if (header.FileVersion != 6)
+{
+    Warning(
+        "This template expects MUSX version 6, but the file uses version %u.",
+        header.FileVersion
+    );
+}
+
+if (header.FileSize != FileSize())
+{
+    Warning(
+        "Header file size is %u, but actual file size is %u.",
+        header.FileSize,
+        FileSize()
+    );
+}
+
+/*
+    The 32-byte MUSX header is little-endian.
+
+    As in the other EuroSound templates, the payload
+    is changed to big-endian for GameCube files.
+*/
+
+local int isGc =
+    header.Platform[0] == 'G' &&
+    header.Platform[1] == 'C';
+
+if (isGc)
+{
+    BigEndian();
+}
+
+//------------------------------------------------
+// Array headers
+//------------------------------------------------
+
+SetBackColor(cGreen);
+
+ArrayInfo MusicHeadersInfo;
+ArrayInfo MusicMarkerCountsInfo;
+ArrayInfo MusicMarkerListsInfo;
+
+//------------------------------------------------
+// Music headers
+//------------------------------------------------
+
+if (MusicHeadersInfo.Count > 0)
+{
+    SetBackColor(cBlue);
+
+    MusicHeader MusicHeaders[
+        MusicHeadersInfo.Count
+    ] <optimize=false>;
+}
+
+//------------------------------------------------
+// Marker counts
+//------------------------------------------------
+
+if (MusicMarkerCountsInfo.Count > 0)
+{
+    SetBackColor(cLtGreen);
+
+    MusicMarkerCounts MusicMarkerCountsEntries[
+        MusicMarkerCountsInfo.Count
+    ] <optimize=false>;
+}
+
+//------------------------------------------------
+// Marker-list entries
+//------------------------------------------------
+
+if (MusicMarkerListsInfo.Count > 0)
+{
+    SetBackColor(cLtRed);
+
+    MusicMarkerListEntry MusicMarkerLists[
+        MusicMarkerListsInfo.Count
+    ] <optimize=false>;
+}
+
+//------------------------------------------------
+// Remaining unknown data
+//------------------------------------------------
+
+if (FTell() < FileSize())
+{
+    SetBackColor(cGray);
+
+    ubyte UnknownTrailingData[
+        FileSize() - FTell()
+    ];
+}
