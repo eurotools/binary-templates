@@ -88,17 +88,17 @@ typedef struct
 } SfxSample <read=Str("ref=%d pitch=%d rndPitch=%u vol=%d rndVol=%d pan=%d rndPan=%d", FileRef, PitchOffset, RandomPitchOffset, BaseVolume, RandomVolumeOffset, Pan, RandomPan)>;
 typedef struct
 {
-    ubyte UseDistCheck;
     ushort GroupHashCode <format=hex>;
-    ubyte PackedPadding <format=hex>;
-} PcPackedGroup <read=Str("groupHash=%#06x useDist=%u pad=%#02x", GroupHashCode, UseDistCheck, PackedPadding)>;
+    ubyte GroupMaxChannels;
+    ubyte Padding <format=hex>;
+} ExpandedGroupData <read=Str("groupHash=%#06x maxChannels=%u pad=%#02x", GroupHashCode, GroupMaxChannels, Padding)>;
 
 typedef struct
 {
     ushort Packed <format=hex>;
-    local uint UseDistCheck = (Packed >> 12) & 0x0f;
-    local uint GroupHashCode = Packed & 0x0fff;
-} ConsolePackedGroup <read=Str("groupHash=%#05x useDist=%u packed=%#06x", GroupHashCode, UseDistCheck, Packed)>;
+    local uint GroupMaxChannels = Packed & 0x000f;
+    local uint GroupHashCode = (Packed >> 4) & 0x0fff;
+} CompactGroupData <read=Str("groupHash=%#05x maxChannels=%u packed=%#06x", GroupHashCode, GroupMaxChannels, Packed)>;
 
 typedef struct
 {
@@ -161,16 +161,16 @@ typedef struct
     ubyte MasterVolume;
     local ushort FlagsMask = 0;
     local uint DisplayGroupHashCode = 0;
-    local uint DisplayUseDistCheck = 0;
+    local uint DisplayGroupMaxChannels = 0;
 
-    if (isPc)
+    if (!isPs2)
     {
-        PcPackedGroup GroupData <comment="PC stores this as 4 bytes: use distance check, 16-bit group hash code, then one padding/unused byte.">;
-        PcSfxFlagBytes Flags <comment="PC stores one byte per SFX flag: 0 = off, 1 = on. Order matches SfxFlags enum.">;
-        PcUserFlagBytes UserFlags <comment="PC stores one byte per user flag: 0 = off, 1 = on.">;
+        ExpandedGroupData GroupData <comment="Non-PS2 platforms store a 16-bit group hash code, one-byte group maximum channels value, then one padding/unused byte.">;
+        PcSfxFlagBytes Flags <comment="Non-PS2 platforms store one byte per SFX flag: 0 = off, 1 = on. Order matches SfxFlags enum.">;
+        PcUserFlagBytes UserFlags <comment="Non-PS2 platforms store one byte per user flag: 0 = off, 1 = on.">;
 
         DisplayGroupHashCode = GroupData.GroupHashCode;
-        DisplayUseDistCheck = GroupData.UseDistCheck;
+        DisplayGroupMaxChannels = GroupData.GroupMaxChannels;
         FlagsMask = (Flags.MaxReject != 0 ? 1 : 0) |
                     (Flags.UnPausable != 0 ? 2 : 0) |
                     (Flags.IgnoreMasterVolume != 0 ? 4 : 0) |
@@ -190,11 +190,11 @@ typedef struct
     }
     else
     {
-        ConsolePackedGroup GroupData <comment="Console stores use distance check in the high nibble and a 12-bit group hash code in the low bits.">;
+        CompactGroupData GroupData <comment="PS2 stores the 12-bit group hash code in bits 15-4 and group maximum channels in bits 3-0.">;
         ushort Flags <format=hex>;
         ushort UserFlags <format=hex>;
-        DisplayGroupHashCode = GroupData.Packed & 0x0fff;
-        DisplayUseDistCheck = (GroupData.Packed >> 12) & 0x0f;
+        DisplayGroupHashCode = (GroupData.Packed >> 4) & 0x0fff;
+        DisplayGroupMaxChannels = GroupData.GroupMaxChannels;
         FlagsMask = Flags;
     }
 
@@ -203,7 +203,7 @@ typedef struct
     local string ActiveFlags = GetFlagsText(FlagsMask);
     short SampleCount;
     SfxSample Samples[SampleCount] <optimize=false>;
-} SfxEntry <read=Str("samples=%d tracking=%s group=%#x useDist=%u flags=%s doppler=%u userValue=%u", SampleCount, EnumToString(Tracking), DisplayGroupHashCode, DisplayUseDistCheck, ActiveFlags, DopplerValue, UserValue), optimize=false>;
+} SfxEntry <read=Str("samples=%d tracking=%s group=%#x maxChannels=%u flags=%s doppler=%u userValue=%u", SampleCount, EnumToString(Tracking), DisplayGroupHashCode, DisplayGroupMaxChannels, ActiveFlags, DopplerValue, UserValue), optimize=false>;
 
 typedef struct
 {
@@ -252,6 +252,7 @@ if (header.Magic != "MUSX")
 
 local int isGc = (header.Platform[0] == 'G' && header.Platform[1] == 'C');
 local int isPc = (header.Platform[0] == 'P' && header.Platform[1] == 'C');
+local int isPs2 = (header.Platform[0] == 'P' && header.Platform[1] == 'S' && header.Platform[2] == '2' && header.Platform[3] == '_');
 if (isGc) BigEndian();
 
 SetBackColor(cGreen);

@@ -1,4 +1,4 @@
-//------------------------------------------------
+﻿//------------------------------------------------
 //--- 010 Editor Binary Template
 //
 //      File: spyro_sfx_soundbanks.bt
@@ -88,17 +88,17 @@ typedef struct
 } SfxSample <read=Str("ref=%d pitch=%d rndPitch=%u vol=%d rndVol=%d pan=%d rndPan=%d", FileRef, PitchOffset, RandomPitchOffset, BaseVolume, RandomVolumeOffset, Pan, RandomPan)>;
 typedef struct
 {
-    ubyte UseDistCheck;
+    ubyte GroupMaxChannels;
     ushort GroupHashCode <format=hex>;
     ubyte PackedPadding <format=hex>;
-} PcPackedGroup <read=Str("groupHash=%#06x useDist=%u pad=%#02x", GroupHashCode, UseDistCheck, PackedPadding)>;
+} PcPackedGroup <read=Str("groupHash=%u maxChannels=%u pad=%#02x", GroupHashCode, GroupMaxChannels, PackedPadding)>;
 
 typedef struct
 {
     ushort Packed <format=hex>;
-    local uint UseDistCheck = (Packed >> 12) & 0x0f;
+    local uint GroupMaxChannels = (Packed >> 12) & 0x0f;
     local uint GroupHashCode = Packed & 0x0fff;
-} ConsolePackedGroup <read=Str("groupHash=%#05x useDist=%u packed=%#06x", GroupHashCode, UseDistCheck, Packed)>;
+} ConsolePackedGroup <read=Str("groupHash=%u maxChannels=%u packed=%#06x", GroupHashCode, GroupMaxChannels, Packed)>;
 
 typedef struct
 {
@@ -140,15 +140,15 @@ typedef struct
     ubyte MasterVolume;
     local ushort FlagsMask = 0;
     local uint DisplayGroupHashCode = 0;
-    local uint DisplayUseDistCheck = 0;
+    local uint DisplayGroupMaxChannels = 0;
 
     if (isPc)
     {
-        PcPackedGroup GroupData <comment="PC stores this as 4 bytes: use distance check, 16-bit group hash code, then one padding/unused byte.">;
+        PcPackedGroup GroupData <comment="PC stores this as 4 bytes: maximum group channels, 16-bit group hash code, then one padding/unused byte.">;
         PcSfxFlagBytes Flags <comment="PC stores one byte per SFX flag: 0 = off, 1 = on. Order matches SfxFlags enum.">;
 
         DisplayGroupHashCode = GroupData.GroupHashCode;
-        DisplayUseDistCheck = GroupData.UseDistCheck;
+        DisplayGroupMaxChannels = GroupData.GroupMaxChannels;
         FlagsMask = (Flags.MaxReject != 0 ? 1 : 0) |
                     (Flags.UnPausable != 0 ? 2 : 0) |
                     (Flags.IgnoreMasterVolume != 0 ? 4 : 0) |
@@ -168,17 +168,17 @@ typedef struct
     }
     else
     {
-        ConsolePackedGroup GroupData <comment="Console stores use distance check in the high nibble and a 12-bit group hash code in the low bits.">;
+        ConsolePackedGroup GroupData <comment="Consoles store GroupMaxChannels in the high nibble and a 12-bit GroupHashCode in the low bits.">;
         ushort Flags <format=hex>;
-        DisplayGroupHashCode = GroupData.Packed & 0x0fff;
-        DisplayUseDistCheck = (GroupData.Packed >> 12) & 0x0f;
+        DisplayGroupHashCode = GroupData.GroupHashCode;
+        DisplayGroupMaxChannels = GroupData.GroupMaxChannels;
         FlagsMask = Flags;
     }
 
     local string ActiveFlags = GetFlagsText(FlagsMask);
     short SampleCount;
     SfxSample Samples[SampleCount] <optimize=false>;
-} SfxEntry <read=Str("samples=%d tracking=%s group=%#x useDist=%u flags=%s", SampleCount, EnumToString(Tracking), DisplayGroupHashCode, DisplayUseDistCheck, ActiveFlags), optimize=false>;
+} SfxEntry <read=Str("samples=%d tracking=%s group=%u maxChannels=%u flags=%s", SampleCount, EnumToString(Tracking), DisplayGroupHashCode, DisplayGroupMaxChannels, ActiveFlags), optimize=false>;
 
 typedef struct
 {

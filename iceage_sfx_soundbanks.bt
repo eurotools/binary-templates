@@ -110,15 +110,16 @@ typedef struct
 typedef struct
 {
     ushort GroupHashCode <format=hex>;
-    byte GroupMaxChannels;
-} PcGroupData <read=Str("groupHash=%#06x maxChannels=%d", GroupHashCode, GroupMaxChannels)>;
+    ubyte GroupMaxChannels;
+    ubyte Padding <format=hex>;
+} ExpandedGroupData <read=Str("groupHash=%#06x maxChannels=%u padding=%#04x", GroupHashCode, GroupMaxChannels, Padding)>;
 
 typedef struct
 {
     ushort Packed <format=hex>;
     local uint GroupMaxChannels = Packed & 0x000f;
     local uint GroupHashCode = Packed >> 4;
-} ConsoleGroupData <read=Str("groupHash=%#05x maxChannels=%u packed=%#06x", GroupHashCode, GroupMaxChannels, Packed)>;
+} Ps2GroupData <read=Str("groupHash=%#05x maxChannels=%u packed=%#06x", GroupHashCode, GroupMaxChannels, Packed)>;
 
 typedef struct
 {
@@ -176,11 +177,11 @@ typedef struct
     local uint DisplayGroupHashCode = 0;
     local uint DisplayGroupMaxChannels = 0;
 
-    if (isPc)
+    if (!isPs2)
     {
-        PcGroupData GroupData <comment="PC stores a 16-bit group hash code followed by an 8-bit maximum channel count.">;
-        PcSfxFlagBytes Flags <comment="PC stores one byte per SFX flag: 0 = off, 1 = on. Order matches SfxFlags enum.">;
-        PcUserFlagBytes UserFlags <comment="PC stores one byte per user flag: 0 = off, 1 = on.">;
+        ExpandedGroupData GroupData <comment="PC, Xbox and GameCube store a 16-bit group hash, an 8-bit maximum channel count and one padding byte.">;
+        PcSfxFlagBytes Flags <comment="Non-PS2 platforms store one byte per SFX flag: 0 = off, non-zero = on.">;
+        PcUserFlagBytes UserFlags <comment="Non-PS2 platforms store one byte per user flag: 0 = off, non-zero = on.">;
 
         DisplayGroupHashCode = GroupData.GroupHashCode;
         DisplayGroupMaxChannels = GroupData.GroupMaxChannels;
@@ -203,9 +204,9 @@ typedef struct
     }
     else
     {
-        ConsoleGroupData GroupData <comment="Console packs the maximum channel count in the low 4 bits and the group hash code in the upper 12 bits.">;
-        ushort Flags <format=hex>;
-        ushort UserFlags <format=hex>;
+        Ps2GroupData GroupData <comment="PS2 packs GroupMaxChannels into bits 0-3 and GroupHashCode into bits 4-15.">;
+        ushort Flags <format=hex, comment="PS2 stores the 16 SFX flags as a bit mask.">;
+        ushort UserFlags <format=hex, comment="PS2 stores the 16 user flags as a bit mask.">;
         DisplayGroupHashCode = GroupData.Packed >> 4;
         DisplayGroupMaxChannels = GroupData.Packed & 0x000f;
         FlagsMask = Flags;
@@ -213,13 +214,17 @@ typedef struct
 
     ubyte DopplerValue;
     ubyte UserValue;
-    ubyte SfxDucker;
-    ubyte Spare;
+
+    if (header.FileVersion > 5)
+    {
+        ubyte SfxDucker;
+        ubyte Spare;
+    }
     local string ActiveFlags = GetFlagsText(FlagsMask);
     local string ActiveTrackingType = GetTrackingTypeText(TrackingType);
     short SampleCount;
     SfxSample Samples[SampleCount] <optimize=false>;
-} SfxEntry <read=Str("samples=%d tracking=%s group=%#x maxChannels=%u flags=%s doppler=%u userValue=%u sfxDucker=%u spare=%u", SampleCount, ActiveTrackingType, DisplayGroupHashCode, DisplayGroupMaxChannels, ActiveFlags, DopplerValue, UserValue, SfxDucker, Spare), optimize=false>;
+} SfxEntry <read=Str("samples=%d tracking=%s group=%#x maxChannels=%u flags=%s doppler=%u userValue=%u", SampleCount, ActiveTrackingType, DisplayGroupHashCode, DisplayGroupMaxChannels, ActiveFlags, DopplerValue, UserValue), optimize=false>;
 
 typedef struct
 {
@@ -266,9 +271,13 @@ if (header.Magic != "MUSX")
     return -1;
 }
 
-local int isGc = (header.Platform[0] == 'G' && header.Platform[1] == 'C');
-local int isPc = (header.Platform[0] == 'P' && header.Platform[1] == 'C');
-if (isGc) BigEndian();
+local int isGc  = (header.Platform[0] == 'G' && header.Platform[1] == 'C' && header.Platform[2] == '_' && header.Platform[3] == '_');
+local int isXb2 = (header.Platform[0] == 'X' && header.Platform[1] == 'B' && header.Platform[2] == '2' && header.Platform[3] == '_');
+local int isPs2 = (header.Platform[0] == 'P' && header.Platform[1] == 'S' && header.Platform[2] == '2' && header.Platform[3] == '_');
+
+// The original loader enables byte swapping for GC__ and XB2_.
+if (isGc || isXb2)
+    BigEndian();
 
 SetBackColor(cGreen);
 MusxEntry SfxData;
