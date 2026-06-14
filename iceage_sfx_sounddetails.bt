@@ -1,0 +1,136 @@
+//------------------------------------------------
+//--- 010 Editor Binary Template
+//
+//      File: iceage_sfx_sounddetails.bt
+//   Purpose: Parse EuroSound __SoundDetails.SFX files.
+// File Mask: *__sounddetails.sfx
+//  ID Bytes: 4D 55 53 58
+//------------------------------------------------
+
+LittleEndian();
+
+typedef struct
+{
+    char Magic[4];
+    uint Hashcode <format=hex>;
+    uint FileVersion;
+    uint FileSize <format=hex>;
+    char Platform[4];
+    uint TimeStamp;
+    uint CodecFlag;
+    uint Padding;
+} MusxHeader <read=Str(
+    "MUSX hc=%#010x platform=%c%c%c%c version=%u size=%u",
+    Hashcode,
+    Platform[0],
+    Platform[1],
+    Platform[2],
+    Platform[3],
+    FileVersion,
+    FileSize
+)>;
+
+typedef struct
+{
+    uint FirstHashcode <format=hex>;
+    uint LastHashcode <format=hex>;
+} HashcodeRange <read=Str(
+    "first=%#010x last=%#010x",
+    FirstHashcode,
+    LastHashcode
+)>;
+
+typedef struct
+{
+    uint SoundHashcode <format=hex>;
+
+    ushort InnerRadius;
+    ushort OuterRadius;
+
+    float Duration;
+
+    byte Looping;
+    byte Tracking3d;
+    byte SampleStreamed;
+    byte Is3d;
+} SoundDetails <read=Str(
+    "%#010x inner=%u outer=%u duration=%f loop=%u tracking=%u streamed=%u is3d=%u",
+    SoundHashcode,
+    InnerRadius,
+    OuterRadius,
+    Duration,
+    Looping,
+    Tracking3d,
+    SampleStreamed,
+    Is3d
+)>;
+
+
+//------------------------------------------------
+// File
+//------------------------------------------------
+
+SetBackColor(cLtPurple);
+MusxHeader Header;
+
+if (Header.Magic != "MUSX")
+{
+    Warning("File is not a valid MUSX file. Template stopped.");
+    return -1;
+}
+
+local int IsGameCube =
+    Header.Platform[0] == 'G' &&
+    Header.Platform[1] == 'C';
+
+if (IsGameCube)
+{
+    BigEndian();
+}
+
+local uint PayloadStart = 32;
+local uint PayloadSize = FileSize() - PayloadStart;
+
+FSeek(PayloadStart);
+
+SetBackColor(cGreen);
+HashcodeRange Range;
+
+SetBackColor(cBlue);
+
+local uint EntriesSize =
+    PayloadSize - sizeof(HashcodeRange);
+
+local uint EntryCount =
+    EntriesSize / sizeof(SoundDetails);
+
+SoundDetails Entries[EntryCount] <optimize=false>;
+
+
+//------------------------------------------------
+// Validation
+//------------------------------------------------
+
+if (EntriesSize % sizeof(SoundDetails) != 0)
+{
+    Warning(
+        "SoundDetails payload is not aligned to the expected entry size."
+    );
+}
+
+if (EntryCount > 0)
+{
+    if (Entries[0].SoundHashcode != Range.FirstHashcode)
+    {
+        Warning(
+            "The first entry hashcode does not match FirstHashcode."
+        );
+    }
+
+    if (Entries[EntryCount - 1].SoundHashcode != Range.LastHashcode)
+    {
+        Warning(
+            "The last entry hashcode does not match LastHashcode."
+        );
+    }
+}
